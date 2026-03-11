@@ -30,4 +30,4 @@ if __name__=="__main__":
         epochs=5
     )
 
-    evaluate_model(model, test_loader, device)
+    evaluate_model(model, test_loader, history, device)

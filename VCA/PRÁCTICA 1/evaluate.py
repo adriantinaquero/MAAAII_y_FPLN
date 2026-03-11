@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 
-def evaluate_model(model, test_loader, history, device, num_classes=10):
+def evaluate_model(model, test_loader, history, device, num_classes=2):
 
     # EVALUACIÓN CUANTITATIVA
 

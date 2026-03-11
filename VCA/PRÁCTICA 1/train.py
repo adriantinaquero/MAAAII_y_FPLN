@@ -77,29 +77,29 @@ def train_model(model, train_loader, val_loader, test_loader, device, epochs=5):
                 f"Train Acc: {train_acc:.4f} | Val Acc: {val_acc:.4f}")
 
 
-    # model.eval()
-    # test_loss = 0
-    # correct = 0
-    # total = 0
+    model.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
 
-    # with torch.no_grad():
-    #     for images, labels in test_loader:
-    #         images = images.to(device)
-    #         labels = labels.to(device)
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images = images.to(device)
+            labels = labels.to(device)
 
-    #         outputs = model(images)
-    #         loss = criterion(outputs, labels)
+            outputs = model(images)
+            loss = criterion(outputs, labels)
 
-    #         test_loss += loss.item()
+            test_loss += loss.item()
 
-    #         _, preds = torch.max(outputs, 1)
-    #         correct += (preds == labels).sum().item()
-    #         total += labels.size(0)
+            _, preds = torch.max(outputs, 1)
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
 
-    # test_loss /= len(test_loader)
-    # test_acc = correct / total
+    test_loss /= len(test_loader)
+    test_acc = correct / total
 
-    # history["test_loss"].append(test_loss)
-    # history["test_acc"].append(test_acc)
+    history["test_loss"].append(test_loss)
+    history["test_acc"].append(test_acc)
 
     return model, history
