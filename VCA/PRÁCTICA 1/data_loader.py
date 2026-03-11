@@ -27,7 +27,7 @@ def load_dataset(route: str) -> tuple:
 
     train_size = int(0.7 * dataset_size)
     val_size = int(0.15 * dataset_size)
-    test_size = int(0.15 * dataset_size)
+    test_size = dataset_size - (train_size + val_size)
 
     train_basic, val_data, test_data = random_split(
         dataset_basic,

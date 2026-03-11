@@ -1,8 +1,9 @@
 import torch
 from data_loader import load_dataset
-from models import load_dataset, create_vgg
+from models import create_vgg
 from train import train_model
 from evaluate import evaluate_model
+import numpy as np
 
 # IMPLEMENTAR:
 #   DIVIDIR .CSV EN TRAIN, VAL Y TEST
@@ -15,6 +16,7 @@ print("Using device:", device)
 route = "VCA/PRÁCTICA 1/dataset/ship.csv"
 
 train_basic, train_aug, val_loader, test_loader = load_dataset(route)
+
 
 # model = create_vgg(pretrained=True)
 
