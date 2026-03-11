@@ -12,9 +12,9 @@ from evaluate import evaluate_model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
-route = "C:/Users/Usuario/Documents/adrispul/Universidad/INTELIGENCIA ARTIFICIAL/3º/2º SEMESTRE/VCA/PRÁCTICAS/PRÁCTICA 1/dataset"
+route = "VCA/PRÁCTICA 1/dataset/ship.csv"
 
-data = load_dataset(route)
+train_basic, train_aug, val_loader, test_loader = load_dataset(route)
 
 # model = create_vgg(pretrained=True)
 

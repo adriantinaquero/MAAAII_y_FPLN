@@ -1,4 +1,5 @@
-from torch.utils.data import DataLoader
+import torch
+from torch.utils.data import DataLoader, random_split
 import torchvision.transforms as transforms
 from dataset import Ship
 
@@ -20,14 +21,31 @@ def load_dataset(route: str) -> tuple:
         transforms.Normalize((0.5,), (0.5,)),
     ])
 
-    train_basic = Ship(route, transform_basic)
-    train_aug = Ship(route, transform_aug)
-    test_dataset = Ship(route, transform_basic)
+    dataset_basic = Ship(route, transform_basic)
+    dataset_aug = Ship(route, transform_aug)
+    dataset_size = len(dataset_basic)
+
+    train_size = int(0.7 * dataset_size)
+    val_size = int(0.15 * dataset_size)
+    test_size = int(0.15 * dataset_size)
+
+    train_basic, val_data, test_data = random_split(
+        dataset_basic,
+        [train_size, val_size, test_size],
+        generator=torch.Generator().manual_seed(42)
+    )
+
+    train_aug, val_data, test_data = random_split(
+        dataset_aug,
+        [train_size, val_size, test_size],
+        generator=torch.Generator().manual_seed(42)
+    )
 
     batch_size = 128
 
     train_loader_basic = DataLoader(train_basic, batch_size=batch_size, shuffle=True, num_workers=4)
     train_loader_aug = DataLoader(train_aug, batch_size=batch_size, shuffle=True, num_workers=4)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
+    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, num_workers=4)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=4)
 
-    return (train_loader_basic, train_loader_aug, test_loader)
+    return train_loader_basic, train_loader_aug, val_loader, test_loader
