@@ -76,7 +76,7 @@ def create_skipgram_windows(sequence):
     return np.array(target_words), np.array(context_words), np.array(labels)
 
 
-def build_skipgram_model(vocab_size, embedding_dim=100):
+def create_skipgram_model(vocab_size, embedding_dim=100):
     target_input = layers.Input(shape=(1,))
     context_input = layers.Input(shape=(1,))
 
@@ -119,7 +119,7 @@ if __name__=="__main__":
     # entrenamos Skipgram
     sequences, tokenizer, vocab_size = tokenize_text()
     target, context, labels = create_skipgram_windows(sequences)
-    model = build_skipgram_model(vocab_size)
+    model = create_skipgram_model(vocab_size)
     model.fit(
         [target, context],
         labels,
