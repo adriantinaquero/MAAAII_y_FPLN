@@ -60,7 +60,7 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
     # curva de Loss
     plt.figure()
     plt.plot(epochs, history["train_loss"], 'k', label="Train")
-    plt.plot(epochs, history["test_loss"], 'r', label="Test")
+    plt.plot(epochs, history["val_loss"], 'r', label="Val")
     plt.title("Loss")
     plt.legend()
     plt.show()
@@ -68,7 +68,7 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
     # curva de Accuracy
     plt.figure()
     plt.plot(epochs, history["train_acc"], 'k', label="Train")
-    plt.plot(epochs, history["test_acc"], 'r', label="Test")
+    plt.plot(epochs, history["val_acc"], 'r', label="Val")
     plt.title("Accuracy")
     plt.legend()
     plt.show()
@@ -78,7 +78,7 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
     # mostramos algunos ejemplos de cada clase predecidos incorrectamente
     for clase in range(num_classes):
         print(f"\nClase {clase} - Errores:")
-        show_examples(model, test_loader, clase)
+        show_examples(model, test_loader, clase, device)
 
 
 
@@ -94,12 +94,12 @@ def show_examples(model, loader, class_id, device, num_images=5):
             images = images.to(device)
             outputs = model(images)
             _, preds = torch.max(outputs, 1)
-
+                    
             for i in range(len(images)):
 
                 if labels[i] == class_id and preds[i] != labels[i]:
-                    plt.subplot(1, num_images, shown+1)
-                    plt.imshow(images[i].cpu().squeeze(), cmap='gray')
+                    plt.subplot(1, num_images, shown + 1)
+                    plt.imshow(images[i].cpu().permute(1, 2, 0))       # permute para pasar de [C, H, W] a [H, W, C] 
                     plt.title(f"Predicción:{preds[i].item()}")
                     plt.axis("off")
 
