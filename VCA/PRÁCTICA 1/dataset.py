@@ -1,3 +1,4 @@
+import torch
 import torch.utils.data as data
 from torchvision.io import decode_image
 import torchvision.transforms as transforms
@@ -26,7 +27,7 @@ class Ship(data.Dataset):
         image = decode_image(img_path)
         image = self.transform(image)
 
-        return image, label
+        return image, int(label)
 
     def __len__(self):
         return len(self.img_files)

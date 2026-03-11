@@ -7,13 +7,15 @@ from dataset import Ship
 def load_dataset(route: str) -> tuple:
 
     transform_basic = transforms.Compose([
-        transforms.Resize(64),
+        transforms.Resize((128, 128)),
+        transforms.ToPILImage(),
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
 
     transform_aug = transforms.Compose([
-        transforms.Resize(64),
+        transforms.Resize((128, 128)),
+        transforms.ToPILImage(),
         transforms.Pad(4),
         transforms.RandomAffine(degrees=45, translate=(0.2, 0.2), scale=(0.75,1.25), shear=15),
         transforms.ColorJitter(brightness=(0.2,0.8), contrast=(0.2, 0.8)),
@@ -43,9 +45,9 @@ def load_dataset(route: str) -> tuple:
 
     batch_size = 128
 
-    train_loader_basic = DataLoader(train_basic, batch_size=batch_size, shuffle=True, num_workers=4)
-    train_loader_aug = DataLoader(train_aug, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, num_workers=4)
-    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=4)
+    train_loader_basic = DataLoader(train_basic, batch_size=batch_size, shuffle=True)
+    train_loader_aug = DataLoader(train_aug, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
     return train_loader_basic, train_loader_aug, val_loader, test_loader

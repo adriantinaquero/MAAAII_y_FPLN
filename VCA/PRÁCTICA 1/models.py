@@ -10,12 +10,12 @@ def create_vgg(device, pretrained=True):
 
     # adaptamos la primera capa a 1 canal
     old_layer = vgg.features[0]
-    new_layer = nn.Conv2d(1, 64, kernel_size=3, padding=1)
+    new_layer = nn.Conv2d(3, 64, kernel_size=3, padding=1)
 
-    if pretrained:
-        # inicializamos como suma de canales RGB
-        new_layer.weight.data = old_layer.weight.sum(dim=1, keepdim=True)
-        new_layer.bias.data = old_layer.bias.data
+    # if pretrained:
+    #     # inicializamos como suma de canales RGB
+    #     new_layer.weight.data = old_layer.weight.sum(dim=1, keepdim=True)
+    #     new_layer.bias.data = old_layer.bias.data
 
     vgg.features[0] = new_layer
 
