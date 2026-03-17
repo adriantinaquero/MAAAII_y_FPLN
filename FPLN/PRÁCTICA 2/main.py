@@ -1,8 +1,8 @@
 import numpy as np
 from keras import layers
 from keras.models import Model
-# from keras.preprocessing.text import Tokenizer      # para versiones de keras < 3
 from keras.layers import TextVectorization          # para versiones de keras >= 3
+import random
 
 
 # Deberíamos hacer el create_windows para un window_size variable!!
@@ -23,20 +23,6 @@ def tokenize_text():
     vocab_size = len(vectorizer.get_vocabulary())
 
     return sequence, vectorizer, vocab_size
-
-
-# # para versiones de keras < 3
-# def tokenize_text():
-#     with open("FPLN/PRÁCTICA 2/datasets/game_of_thrones.txt") as file:
-#         text = file.read()
-
-#     tokenizer = TextVectorization.Tokenizer()
-#     tokenizer.fit_on_texts([text])
-#     sequences = tokenizer.texts_to_sequences([text])[0]
-#     word_index = tokenizer.word_index
-#     vocab_size = len(word_index) + 1
-
-#     return sequences, tokenizer, vocab_size
 
 
 def create_cbow_windows(sequences: str):
@@ -66,6 +52,7 @@ def create_skipgram_windows(sequence):
     target_words = []
     context_words = []
     labels = []
+    weights = []
     for i in range(2, len(sequence)-2):
         target = sequence[i]
         context = [sequence[i-2], sequence[i-1], sequence[i+1], sequence[i+2]]
@@ -73,7 +60,14 @@ def create_skipgram_windows(sequence):
             target_words.append(target)
             context_words.append(word)
             labels.append(1)
-    return np.array(target_words), np.array(context_words), np.array(labels)
+            weights.append(75)
+            for i in range(4):
+                target_words.append(target)
+                random_context = random.choice(sequence)
+                context_words.append(random_context)
+                labels.append(0)
+                weights.append(25)
+    return np.array(target_words), np.array(context_words), np.array(labels), np.array(weights)
 
 
 def create_skipgram_model(vocab_size, embedding_dim=100):
@@ -103,28 +97,29 @@ def create_skipgram_model(vocab_size, embedding_dim=100):
 
 if __name__=="__main__":
 
-    # enrenamos CBOW
-    sequences, tokenizer, vocab_size = tokenize_text()
-    context, labels = create_cbow_windows(sequences)
-    model = create_cbow_model(vocab_size)
-    model.summary()
-    model.fit(
-        context,
-        labels,
-        batch_size=128,
-        epochs=10
-    )
+    # # enrenamos CBOW
+    # sequences, tokenizer, vocab_size = tokenize_text()
+    # context, labels = create_cbow_windows(sequences)
+    # model = create_cbow_model(vocab_size)
+    # model.summary()
+    # model.fit(
+    #     context,
+    #     labels,
+    #     batch_size=128,
+    #     epochs=10
+    # )
 
 
     # entrenamos Skipgram
     sequences, tokenizer, vocab_size = tokenize_text()
-    target, context, labels = create_skipgram_windows(sequences)
+    target, context, labels, weights = create_skipgram_windows(sequences)
     model = create_skipgram_model(vocab_size)
     model.fit(
         [target, context],
         labels,
-        batch_size=128,
-        epochs=10
+        sample_weight=weights,
+        batch_size=256,
+        epochs=10,
     )
 
 
