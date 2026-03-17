@@ -25,12 +25,13 @@ def tokenize_text():
     return sequence, vectorizer, vocab_size
 
 
-def create_cbow_windows(sequences: str):
+def create_cbow_windows(sequences: str, n: int = 5):
     windows = []
     labels = []
-    for i in range(len(sequences)-4):
-        windows.append([sequences[i], sequences[i+1], sequences[i+3], sequences[i+4]])
-        labels.append(sequences[i+2])
+    center = n // 2
+    for i in range(len(sequences) - n + 1):
+        windows.append([sequences[i + k] for k in range(n) if k != center])
+        labels.append(sequences[i + center])
     return np.array(windows), np.array(labels)
 
 
@@ -48,14 +49,15 @@ def create_cbow_model(vocab_size, embedding_dim=100):
     return model
 
 
-def create_skipgram_windows(sequence):
+def create_skipgram_windows(sequence: str, n: int = 5):
     target_words = []
     context_words = []
     labels = []
+    center = n // 2
     weights = []
     for i in range(2, len(sequence)-2):
         target = sequence[i]
-        context = [sequence[i-2], sequence[i-1], sequence[i+1], sequence[i+2]]
+        context = [sequence[i + k] for k in range(-center, center + 1) if k != 0]
         for word in context:
             target_words.append(target)
             context_words.append(word)
