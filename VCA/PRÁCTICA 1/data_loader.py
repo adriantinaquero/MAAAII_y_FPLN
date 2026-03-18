@@ -4,7 +4,7 @@ import torchvision.transforms as transforms
 from dataset import Ship
 
 
-def load_dataset(route: str) -> tuple:
+def load_dataset(route: str, batch_size) -> tuple:
 
     transform_basic = transforms.Compose([
         transforms.Resize((128, 128)),
@@ -37,13 +37,11 @@ def load_dataset(route: str) -> tuple:
         generator=torch.Generator().manual_seed(42)
     )
 
-    train_aug, val_data, test_data = random_split(
+    train_aug, _, _ = random_split(
         dataset_aug,
         [train_size, val_size, test_size],
         generator=torch.Generator().manual_seed(42)
     )
-
-    batch_size = 128
 
     train_loader_basic = DataLoader(train_basic, batch_size=batch_size, shuffle=True)
     train_loader_aug = DataLoader(train_aug, batch_size=batch_size, shuffle=True)

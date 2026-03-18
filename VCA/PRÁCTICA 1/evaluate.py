@@ -33,8 +33,8 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
     disp.plot(cmap="Blues")
     plt.title("Confusion Matrix")
     plt.show()
-
-    # Accuracy
+        
+    # Accuracy global
     accuracy = np.mean(all_preds == all_labels)
     print(f"Accuracy global: {accuracy:.4f}")
 
@@ -55,11 +55,11 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
               f"Sensibilidad={sensitivity:.4f}         "
               f"Especificidad={specificity:.4f}")
         
-    epochs = range(1, len(history["train_loss"]) + 1)
 
+    epochs = range(1, len(history["train_loss"]) + 1)
     # curva de Loss
     plt.figure()
-    plt.plot(epochs, history["train_loss"], 'k', label="Train")
+    plt.plot(epochs, history["train_loss"], 'k', label="Train")  # eje y en escala logarítmica
     plt.plot(epochs, history["val_loss"], 'r', label="Val")
     plt.title("Loss")
     plt.legend()
@@ -99,7 +99,8 @@ def show_examples(model, loader, class_id, device, num_images=5):
 
                 if labels[i] == class_id and preds[i] != labels[i]:
                     plt.subplot(1, num_images, shown + 1)
-                    plt.imshow(images[i].cpu().permute(1, 2, 0))       # permute para pasar de [C, H, W] a [H, W, C] 
+                    img_denormalized = images[i].cpu() * 0.5 + 0.5
+                    plt.imshow(img_denormalized.permute(1, 2, 0).numpy(), vmin=0, vmax=1)       # permute para pasar de [C, H, W] a [H, W, C] 
                     plt.title(f"Predicción:{preds[i].item()}")
                     plt.axis("off")
 
