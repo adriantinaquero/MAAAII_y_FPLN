@@ -25,7 +25,7 @@ def tokenize_text():
     return sequence, vectorizer, vocab_size
 
 
-def create_cbow_windows(sequences: str, n: int = 5):
+def create_cbow_windows(sequences: list, n: int = 5):
     windows = []
     labels = []
     center = n // 2
@@ -49,7 +49,7 @@ def create_cbow_model(vocab_size, embedding_dim=100):
     return model
 
 
-def create_skipgram_windows(sequence: str, n: int = 5):
+def create_skipgram_windows(sequence: list, n: int = 5):
     target_words = []
     context_words = []
     labels = []
@@ -70,6 +70,35 @@ def create_skipgram_windows(sequence: str, n: int = 5):
                 labels.append(0)
                 weights.append(25)
     return np.array(target_words), np.array(context_words), np.array(labels), np.array(weights)
+
+
+def drop_words2(sequence, t: float = 0.001):
+    length = len(sequence)
+    freq_dict = {}
+    for i in sequence:
+        freq_dict[i] = 1 + freq_dict.get(i, 0)
+    for (i, count) in freq_dict.items():
+        relative_freq = count / length
+        drop_prob = 1 - np.sqrt(t/relative_freq)
+        n = random.randint(0, 100)
+        if n < (drop_prob*100):
+            sequence = sequence[sequence != i]
+    return sequence
+
+
+def drop_words(sequence, t: float = 0.001):
+    length = len(sequence)
+    i = 0
+    while i < len(sequence):
+        mask = (sequence==sequence[i])
+        count = (np.count_nonzero(mask))
+        relative_freq = count / length
+        drop_prob = 1 - np.sqrt(t/relative_freq)
+        n = random.randint(0, 100)
+        if n < (drop_prob*100):
+            sequence = sequence[~mask]
+        i += 1
+    return sequence
 
 
 def create_skipgram_model(vocab_size, embedding_dim=100):
@@ -114,6 +143,7 @@ if __name__=="__main__":
 
     # entrenamos Skipgram
     sequences, tokenizer, vocab_size = tokenize_text()
+    sequences = drop_words2(sequences)
     target, context, labels, weights = create_skipgram_windows(sequences)
     model = create_skipgram_model(vocab_size)
     model.fit(
