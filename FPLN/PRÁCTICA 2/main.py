@@ -77,12 +77,12 @@ def drop_words2(sequence, t: float = 0.001):
     freq_dict = {}
     for i in sequence:
         freq_dict[i] = 1 + freq_dict.get(i, 0)
-    for (i, count) in freq_dict.items():
-        relative_freq = count / length
+    for i in sequence:
+        relative_freq = freq_dict[i] / length
         drop_prob = 1 - np.sqrt(t/relative_freq)
         n = random.randint(0, 100)
         if n < (drop_prob*100):
-            sequence = sequence[sequence != i]
+            sequence = np.concatenate([sequence[:i], sequence[(i+1):]])
     return sequence
 
 
@@ -144,15 +144,16 @@ if __name__=="__main__":
     # entrenamos Skipgram
     sequences, tokenizer, vocab_size = tokenize_text()
     sequences = drop_words2(sequences)
-    target, context, labels, weights = create_skipgram_windows(sequences)
-    model = create_skipgram_model(vocab_size)
-    model.fit(
-        [target, context],
-        labels,
-        sample_weight=weights,
-        batch_size=256,
-        epochs=10,
-    )
+    print(len(sequences))
+    # target, context, labels, weights = create_skipgram_windows(sequences)
+    # model = create_skipgram_model(vocab_size)
+    # model.fit(
+    #     [target, context],
+    #     labels,
+    #     sample_weight=weights,
+    #     batch_size=256,
+    #     epochs=10,
+    # )
 
 
 
