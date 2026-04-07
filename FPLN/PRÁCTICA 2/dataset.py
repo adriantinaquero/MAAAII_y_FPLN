@@ -1,10 +1,9 @@
 from keras.layers import TextVectorization          # para versiones de keras >= 3
 
 
-
 # para versiones de keras >= 3
-def tokenize_text(filename: str):
-    with open(f"FPLN/PRÁCTICA 2/datasets/{filename}.txt", encoding="utf-8") as file:
+def tokenize_text(file: str):
+    with open(file, encoding="utf-8") as file:
         text = file.read()
 
     vectorizer = TextVectorization(
@@ -14,15 +13,18 @@ def tokenize_text(filename: str):
     )
     vectorizer.adapt([text])
     sequence = vectorizer([text]).numpy()[0]
-    vocab_size = len(vectorizer.get_vocabulary())
+    vocabulary = vectorizer.get_vocabulary()
+    vocab_size = len(vocabulary)
 
-    return sequence, vectorizer, vocab_size
+    word_index = {word: i for i, word in enumerate(vocabulary)}
+
+    return sequence, vectorizer, vocab_size, word_index
 
 
-def load_dataset(filename: str, train_size=0.7):
-    sequences, tokenizer, vocab_size = tokenize_text(filename)    
+def load_dataset(file: str, train_size=0.7):
+    sequences, tokenizer, vocab_size, word_index = tokenize_text(file)    
     split_index = int(len(sequences) * train_size)
     train_sequences = sequences[:split_index].tolist()
     test_sequences = sequences[split_index:].tolist()
 
-    return train_sequences, test_sequences, tokenizer, vocab_size
+    return train_sequences, test_sequences, tokenizer, vocab_size, word_index
