@@ -7,7 +7,7 @@ from dataset import Ship
 def load_dataset(route: str, batch_size) -> tuple:
 
     transform_basic = transforms.Compose([
-        transforms.Resize((128, 128)),
+        transforms.Resize((256, 256)),
         transforms.ToPILImage(),
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
@@ -49,3 +49,12 @@ def load_dataset(route: str, batch_size) -> tuple:
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
     return train_loader_basic, train_loader_aug, val_loader, test_loader
+
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    a = load_dataset("VCA/PRÁCTICA 1/dataset/ship.csv", 180)
+    for i, p in a[0]:
+        for j, k in zip(i, p):
+            plt.imshow(j.permute(1, 2, 0).numpy(), vmin=0, vmax=1)       # permute para pasar de [C, H, W] a [H, W, C] 
+            plt.title(f"Predicción:{k}")
+            plt.show()

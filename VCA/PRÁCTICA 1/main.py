@@ -34,43 +34,43 @@ if __name__=="__main__":
     evaluate_model(model, test_loader, history, device)
 
 
-    # PREENTRENADA Y CON AUGMENTATION
-    print("PREENTRENADA Y CON AUGMENTATION")
-    model = create_vgg(device, pretrained=True)
-    model, history = train_model(
-        model,
-        train_aug,
-        val_loader,
-        test_loader,
-        device,
-        epochs=5
-    )
-    evaluate_model(model, test_loader, history, device)
+    # # PREENTRENADA Y CON AUGMENTATION
+    # print("PREENTRENADA Y CON AUGMENTATION")
+    # model = create_vgg(device, pretrained=True)
+    # model, history = train_model(
+    #     model,
+    #     train_aug,
+    #     val_loader,
+    #     test_loader,
+    #     device,
+    #     epochs=5
+    # )
+    # evaluate_model(model, test_loader, history, device)
 
 
-    # NO PREENTRENADA Y SIN AUGMENTATION
-    print("NO PREENTRENADA Y SIN AUGMENTATION")
-    model = create_vgg(device, pretrained=False)
-    model, history = train_model(
-        model,
-        train_basic,
-        val_loader,
-        test_loader,
-        device,
-        epochs=5
-    )
-    evaluate_model(model, test_loader, history, device)
+    # # NO PREENTRENADA Y SIN AUGMENTATION
+    # print("NO PREENTRENADA Y SIN AUGMENTATION")
+    # model = create_vgg(device, pretrained=False)
+    # model, history = train_model(
+    #     model,
+    #     train_basic,
+    #     val_loader,
+    #     test_loader,
+    #     device,
+    #     epochs=5
+    # )
+    # evaluate_model(model, test_loader, history, device)
 
 
-    # NO PREENTRENADA Y CON AUGMENTATION
-    print("NO PREENTRENADA Y CON AUGMENTATION")
-    model = create_vgg(device, pretrained=False)
-    model, history = train_model(
-        model,
-        train_aug,
-        val_loader,
-        test_loader,
-        device,
-        epochs=5
-    )
-    evaluate_model(model, test_loader, history, device)
+    # # NO PREENTRENADA Y CON AUGMENTATION
+    # print("NO PREENTRENADA Y CON AUGMENTATION")
+    # model = create_vgg(device, pretrained=False)
+    # model, history = train_model(
+    #     model,
+    #     train_aug,
+    #     val_loader,
+    #     test_loader,
+    #     device,
+    #     epochs=5
+    # )
+    # evaluate_model(model, test_loader, history, device)
