@@ -96,7 +96,7 @@ def show_examples(model, loader, class_id, device, num_images=5):
 
                 if labels[i] == class_id and preds[i] != labels[i]:
                     plt.subplot(1, num_images, shown + 1)
-                    img_denormalized = images[i].cpu() * [0.229, 0.224, 0.225] + [0.485, 0.456, 0.406]
+                    img_denormalized = images[i].cpu() * 0.225 + 0.5
                     plt.imshow(img_denormalized.permute(1, 2, 0).numpy(), vmin=0, vmax=1)       # permute para pasar de [C, H, W] a [H, W, C] 
                     plt.title(f"Predicción:{preds[i].item()}")
                     plt.axis("off")
