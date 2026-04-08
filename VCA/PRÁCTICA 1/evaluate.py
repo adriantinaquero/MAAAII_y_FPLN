@@ -16,8 +16,9 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
     with torch.no_grad():
         for images, labels in test_loader:
             images = images.to(device)
-            outputs = model(images)
-            _, preds = torch.max(outputs, 1)
+
+            outputs = model(images).squeeze(1)
+            preds = (outputs > 0.5).float()
 
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(labels.numpy())
@@ -25,20 +26,16 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
     all_preds = np.array(all_preds)
     all_labels = np.array(all_labels)
 
-    # Matriz de confusión
     cm = confusion_matrix(all_labels, all_preds)
 
-    # mostramos la matriz de confusion
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot(cmap="Blues")
     plt.title("Confusion Matrix")
     plt.show()
         
-    # Accuracy global
     accuracy = np.mean(all_preds == all_labels)
     print(f"Accuracy global: {accuracy:.4f}")
 
-    # Sensibilidad y especificidad por clase
     print("\nSensibilidad y Especificidad por clase:")
 
     for i in range(num_classes):
@@ -54,21 +51,21 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
         print(f"Clase {i}:             "
               f"Sensibilidad={sensitivity:.4f}         "
               f"Especificidad={specificity:.4f}")
-        
 
-    epochs = range(1, len(history["train_loss"]) + 1)
-    # curva de Loss
+    epochs = len(history["val_loss"])
+    val_range = range(1, epochs + 1)
+    train_range = np.linspace(1, epochs, len(history["train_loss"]))
+
     plt.figure()
-    plt.plot(epochs, history["train_loss"], 'k', label="Train")  # eje y en escala logarítmica
-    plt.plot(epochs, history["val_loss"], 'r', label="Val")
+    plt.plot(train_range, history["train_loss"], 'k', label="Train")  # eje y en escala logarítmica
+    plt.plot(val_range, history["val_loss"], 'r', label="Val")
     plt.title("Loss")
     plt.legend()
     plt.show()
 
-    # curva de Accuracy
     plt.figure()
-    plt.plot(epochs, history["train_acc"], 'k', label="Train")
-    plt.plot(epochs, history["val_acc"], 'r', label="Val")
+    plt.plot(train_range, history["train_acc"], 'k', label="Train")
+    plt.plot(val_range, history["val_acc"], 'r', label="Val")
     plt.title("Accuracy")
     plt.legend()
     plt.show()
@@ -92,14 +89,14 @@ def show_examples(model, loader, class_id, device, num_images=5):
     with torch.no_grad():
         for images, labels in loader:
             images = images.to(device)
-            outputs = model(images)
-            _, preds = torch.max(outputs, 1)
+            outputs = model(images).squeeze(1)
+            preds = (outputs > 0.5).float()
                     
             for i in range(len(images)):
 
                 if labels[i] == class_id and preds[i] != labels[i]:
                     plt.subplot(1, num_images, shown + 1)
-                    img_denormalized = images[i].cpu() * 0.5 + 0.5
+                    img_denormalized = images[i].cpu() * [0.229, 0.224, 0.225] + [0.485, 0.456, 0.406]
                     plt.imshow(img_denormalized.permute(1, 2, 0).numpy(), vmin=0, vmax=1)       # permute para pasar de [C, H, W] a [H, W, C] 
                     plt.title(f"Predicción:{preds[i].item()}")
                     plt.axis("off")
