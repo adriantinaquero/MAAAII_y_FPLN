@@ -1,20 +1,33 @@
 import cbow
 import skipgram
 import dataset
+import visualize_embeddings
 
 
 
 if __name__=="__main__":
 
-    train_sequences, test_sequences, tokenizer, vocab_size = dataset.load_dataset("game_of_thrones")
+    file1 = "FPLN/PRÁCTICA 2/datasets/game_of_thrones.txt"
+    file2 = "FPLN/PRÁCTICA 2/materiales/target_words_game_of_thrones.txt"
 
-    cbow.train_cbow_model(train_sequences, test_sequences, vocab_size)
+    train_sequences, test_sequences, tokenizer, vocab_size, word_index = dataset.load_dataset(file1)
 
-    skipgram.train_skipgram_model(train_sequences, test_sequences, vocab_size)
+    target_words = visualize_embeddings.target_words_list(file2)
+    print(target_words)
 
-    # # Para consultar el embedding de una palabra, extraemos los pesos de la capa de Embedding
-    # embeddings = model.layers[1].get_weights()[0]
+    embeddings_untrained, embeddings_trained = cbow.train_cbow_model(train_sequences, test_sequences, vocab_size, epochs=5)
 
-    # # Supongamos que queremos la embedding de la palabra con ID 'word_id'
-    # word_id = 42
-    # word_embedding = embeddings[word_id]
+    print("Generando visualización: CBOW antes del entrenamiento...")
+    visualize_embeddings.visualize_tsne_embeddings(target_words, embeddings_untrained, word_index)
+
+    print("Generando visualización: CBOW después del entrenamiento...")
+    visualize_embeddings.visualize_tsne_embeddings(target_words, embeddings_trained, word_index)
+
+
+    embeddings_untrained, embeddings_trained = skipgram.train_skipgram_model(train_sequences, test_sequences, vocab_size, word_index, target_words, epochs=5)
+
+    print("Generando visualización: Skipgram antes del entrenamiento...")
+    visualize_embeddings.visualize_tsne_embeddings(target_words, embeddings_untrained, word_index)
+
+    print("Generando visualización: Skipgram después del entrenamiento...")
+    visualize_embeddings.visualize_tsne_embeddings(target_words, embeddings_trained, word_index)
