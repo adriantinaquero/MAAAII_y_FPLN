@@ -16,8 +16,9 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
     with torch.no_grad():
         for images, labels in test_loader:
             images = images.to(device)
-            outputs = model(images)
-            _, preds = torch.max(outputs, 1)
+
+            outputs = model(images).squeeze(1)
+            preds = (outputs > 0.5).float()
 
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(labels.numpy())
@@ -88,14 +89,14 @@ def show_examples(model, loader, class_id, device, num_images=5):
     with torch.no_grad():
         for images, labels in loader:
             images = images.to(device)
-            outputs = model(images)
-            _, preds = torch.max(outputs, 1)
+            outputs = model(images).squeeze(1)
+            preds = (outputs > 0.5).float()
                     
             for i in range(len(images)):
 
                 if labels[i] == class_id and preds[i] != labels[i]:
                     plt.subplot(1, num_images, shown + 1)
-                    img_denormalized = images[i].cpu() * 0.5 + 0.5
+                    img_denormalized = images[i].cpu() * [0.229, 0.224, 0.225] + [0.485, 0.456, 0.406]
                     plt.imshow(img_denormalized.permute(1, 2, 0).numpy(), vmin=0, vmax=1)       # permute para pasar de [C, H, W] a [H, W, C] 
                     plt.title(f"Predicción:{preds[i].item()}")
                     plt.axis("off")

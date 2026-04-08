@@ -15,11 +15,11 @@ if __name__=="__main__":
 
     route = "VCA/PRÁCTICA 1/dataset/ship.csv"
 
-    batch_size = 128
+    batch_size = 256
 
     train_basic, train_aug, val_loader, test_loader = load_dataset(route, batch_size)
 
-
+    
     # PREENTRENADA Y SIN AUGMENTATION
     model = create_vgg(device, pretrained=True)
     print("PREENTRENADA Y SIN AUGMENTATION")
@@ -29,7 +29,7 @@ if __name__=="__main__":
         val_loader,
         test_loader,
         device,
-        epochs=5
+        epochs=15
     )
     evaluate_model(model, test_loader, history, device)
 

@@ -12,7 +12,7 @@ def create_vgg(device, pretrained=True):
 
     # congelamos capas si es preentrenado
     if pretrained:
-        for param in vggf.parameters():
+        for param in vggf[:-4].parameters():
             param.requires_grad = False
 
     mymodel = nn.Sequential(
@@ -21,8 +21,8 @@ def create_vgg(device, pretrained=True):
         nn.Flatten(),
         nn.Linear(512, 1024),
         nn.ReLU(),
+        nn.Dropout(0.5),
         nn.Linear(1024, 1),
-        nn.Sigmoid()
     )
 
     return mymodel.to(device)

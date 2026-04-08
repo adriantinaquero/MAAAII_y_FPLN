@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def train_model(model, train_loader, val_loader, test_loader, device, epochs=5):
 
-    criterion = nn.BCELoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
     history = {
         "train_loss": [],
