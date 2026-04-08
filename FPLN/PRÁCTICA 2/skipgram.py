@@ -1,17 +1,16 @@
 import numpy as np
+import random
 from keras import layers
 from keras.models import Model
-import random
-import visualize_embeddings
 
 
 
 
-def create_skipgram_windows(sequence: list, n: int = 5):
+def create_skipgram_windows(sequence: list, window_size: int = 5):
     target_words = []
     context_words = []
     labels = []
-    center = n // 2
+    center = window_size // 2
     weights = []
     for i in range(2, len(sequence)-2):
         target = sequence[i]
@@ -77,8 +76,6 @@ def create_skipgram_model(vocab_size, word_index, target_words, embedding_dim=10
 
     # usamos la primera capa target del embedding
     initial_weights = model.layers[2].get_weights()[0]
-    # print("Generando visualización: Antes del entrenamiento...")
-    # visualize_embeddings.visualize_tsne_embeddings(target_words, initial_weights, word_index)
 
     model.compile(
         optimizer="adam",
@@ -89,10 +86,10 @@ def create_skipgram_model(vocab_size, word_index, target_words, embedding_dim=10
     return model, initial_weights
 
 
-def train_skipgram_model(train_sequences, test_sequences, vocab_size, word_index, target_words, batch_size=128, epochs=5):
+def train_skipgram_model(train_sequences, test_sequences, vocab_size, word_index, target_words, window_size=5, batch_size=128, epochs=5):
     train_sequences = drop_words2(train_sequences)
     # print(len(sequences))
-    target, context, labels, weights = create_skipgram_windows(train_sequences)
+    target, context, labels, weights = create_skipgram_windows(train_sequences, window_size)
     model, initial_weights = create_skipgram_model(vocab_size, word_index, target_words)
     model.fit(
         [target, context],
@@ -104,8 +101,6 @@ def train_skipgram_model(train_sequences, test_sequences, vocab_size, word_index
     )
 
     trained_weights = model.layers[2].get_weights()[0]
-    # print("Generando visualización: Después del entrenamiento...")
-    # visualize_embeddings.visualize_tsne_embeddings(target_words, trained_weights, word_index)
 
     test_target, test_context, test_labels, test_weights = create_skipgram_windows(test_sequences)
     loss, accuracy = model.evaluate([test_target, test_context], test_labels)
