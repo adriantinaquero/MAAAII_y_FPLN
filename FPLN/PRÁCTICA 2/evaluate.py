@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.manifold import TSNE
+from sklearn.metrics.pairwise import cosine_similarity
+import random
 
 
 def target_words_list(file: str):
@@ -9,8 +11,34 @@ def target_words_list(file: str):
     return target_words
 
 
+def nearest_words(target_words, all_words, embeddings, word_index):
+    nearest_words = []
+    for i in range(len(target_words)):
+        word_distances = []
+        indice = word_index[target_words[i]]
+        word1_embedding = embeddings[indice]
+        for j in range(len(all_words)):
+            indice = word_index[all_words[j]]
+            word2_embedding = embeddings[indice]
+            similarity = cosine_similarity([word1_embedding], [word2_embedding])[0][0]
+            word_distances.append((all_words[j], similarity))
+        word_distances.sort(key=lambda x: x[1], reverse=True)
+        top_10 = [word for word, sim in word_distances[:11]]
+        nearest_words.append(top_10)
+    
+    return nearest_words
 
-def visualize_tsne_embeddings(words, embeddings, word_index, filename=None):
+
+# Función que elige una target_word aleatoria y muestra la gráfica de sus
+def visualize_nearest_words(target_words, nearest_words, embeddings, word_index):
+    random_index = random.randrange(0, (len(target_words)-1))
+    random_word = target_words[random_index]
+    close_words = nearest_words[random_index]
+    titulo = "10 palabras más cercanas a " + str(random_word)
+    visualize_tsne_embeddings(close_words, embeddings, word_index, titulo)
+
+
+def visualize_tsne_embeddings(words, embeddings, word_index, titulo, filename=None):
     """
     Visualizes t-SNE embeddings of selected words.
 
@@ -36,6 +64,7 @@ def visualize_tsne_embeddings(words, embeddings, word_index, filename=None):
 
     # Plotting
     plt.figure(figsize=(10, 10))
+    plt.title(titulo, fontsize=15, pad=20)
     for i, word in enumerate(words):
         plt.scatter(reduced_embeddings[i, 0], reduced_embeddings[i, 1])
         plt.annotate(word, xy=(reduced_embeddings[i, 0], reduced_embeddings[i, 1]), xytext=(5, 2),
@@ -48,7 +77,7 @@ def visualize_tsne_embeddings(words, embeddings, word_index, filename=None):
         plt.show()
 
 
-def visualize_all_tsne_embeddings(embeddings, word_index, words_to_plot, words_to_label=None, filename=None):
+def visualize_all_tsne_embeddings(embeddings, word_index, words_to_plot, titulo, words_to_label=None, filename=None):
     """
     Visualizes t-SNE embeddings of selected words with optional labeling.
 
@@ -83,6 +112,7 @@ def visualize_all_tsne_embeddings(embeddings, word_index, words_to_plot, words_t
 
     # Plotting
     plt.figure(figsize=(12, 12))
+    plt.title(titulo, fontsize=15, pad=20)
     for i, index in enumerate(indices_to_plot):
         plt.scatter(reduced_embeddings[i, 0], reduced_embeddings[i, 1], alpha=0.5)
         if index_word[index] in words_to_label:  # Annotate only selected words
@@ -92,25 +122,3 @@ def visualize_all_tsne_embeddings(embeddings, word_index, words_to_plot, words_t
                          textcoords='offset points',
                          ha='right',
                          va='bottom')
-
-
-
-
-if __name__=="__main__":
-    # Mock embeddings and word_index
-    embeddings = np.random.randn(100, 50)  # Mock embeddings with 100 words and 50 dimensions
-    word_index = {f"word_{i}": i for i in range(100)}  # Mock word index
-
-    # Example usage of the first function
-    def example_plot_1():
-        words = ["word_1", "word_2", "word_3", "word_4", "word_5"]  # Select some words to plot
-        visualize_tsne_embeddings(words, embeddings, word_index)
-
-    # Example usage of the second function
-    def example_plot_2():
-        words_to_plot = ["word_10", "word_20", "word_30", "word_40", "word_50"]  # Select some words to plot
-        words_to_label = ["word_10", "word_30", "word_50"]  # Select some words to label
-        visualize_all_tsne_embeddings(embeddings, word_index, words_to_plot, words_to_label)
-
-    example_plot_1()
-    example_plot_2()

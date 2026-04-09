@@ -18,13 +18,13 @@ def tokenize_text(file: str):
 
     word_index = {word: i for i, word in enumerate(vocabulary)}
 
-    return sequence, vectorizer, vocab_size, word_index
+    return sequence, vectorizer, vocabulary, vocab_size, word_index
 
 
 def load_dataset(file: str, train_size=0.7):
-    sequences, tokenizer, vocab_size, word_index = tokenize_text(file)    
+    sequences, tokenizer, vocabulary, vocab_size, word_index = tokenize_text(file)    
     split_index = int(len(sequences) * train_size)
     train_sequences = sequences[:split_index].tolist()
     test_sequences = sequences[split_index:].tolist()
 
-    return train_sequences, test_sequences, tokenizer, vocab_size, word_index
+    return train_sequences, test_sequences, tokenizer, vocabulary, vocab_size, word_index
