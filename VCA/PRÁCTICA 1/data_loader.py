@@ -15,13 +15,14 @@ def load_dataset(route: str, batch_size) -> tuple:
     ])
 
     transform_aug = transforms.Compose([
-        transforms.Resize((128, 128)),
         transforms.ToPILImage(),
+        transforms.Resize((224, 224)),
         transforms.Pad(4),
-        transforms.RandomAffine(degrees=45, translate=(0.2, 0.2), scale=(0.75,1.25), shear=15),
+        transforms.RandomAffine(degrees=15, translate=(0.2, 0.2), scale=(0.75,1.25), shear=15),
         transforms.ColorJitter(brightness=(0.2,0.8), contrast=(0.2, 0.8)),
         transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,)),
+        transforms.Normalize(mean=0.5,
+          std=0.225),
     ])
 
     dataset_basic = Ship(route, transform_basic)
