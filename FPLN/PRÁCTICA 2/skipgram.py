@@ -29,7 +29,7 @@ def create_skipgram_windows(sequence: list, window_size: int = 5):
     return np.array(target_words), np.array(context_words), np.array(labels), np.array(weights)
 
 
-def drop_words2(sequence, t: float = 0.001):
+def drop_words(sequence, t: float = 0.001):
     length = len(sequence)
     freq_dict = {}
     for i in sequence:
@@ -43,22 +43,8 @@ def drop_words2(sequence, t: float = 0.001):
     return sequence
 
 
-def drop_words(sequence, t: float = 0.001):
-    length = len(sequence)
-    i = 0
-    while i < len(sequence):
-        mask = (sequence==sequence[i])
-        count = (np.count_nonzero(mask))
-        relative_freq = count / length
-        drop_prob = 1 - np.sqrt(t/relative_freq)
-        n = random.randint(0, 100)
-        if n < (drop_prob*100):
-            sequence = sequence[~mask]
-        i += 1
-    return sequence
 
-
-def create_skipgram_model(vocab_size, word_index, target_words, embedding_dim=100):
+def create_skipgram_model(vocab_size, embedding_dim=100):
     target_input = layers.Input(shape=(1,))
     context_input = layers.Input(shape=(1,))
 
@@ -86,11 +72,11 @@ def create_skipgram_model(vocab_size, word_index, target_words, embedding_dim=10
     return model, initial_weights
 
 
-def train_skipgram_model(train_sequences, test_sequences, vocab_size, word_index, target_words, window_size=5, batch_size=128, epochs=5):
-    train_sequences = drop_words2(train_sequences)
+def train_skipgram_model(train_sequences, test_sequences, vocab_size, window_size=5, batch_size=128, epochs=5):
+    train_sequences = drop_words(train_sequences)
     # print(len(sequences))
     target, context, labels, weights = create_skipgram_windows(train_sequences, window_size)
-    model, initial_weights = create_skipgram_model(vocab_size, word_index, target_words)
+    model, initial_weights = create_skipgram_model(vocab_size)
     model.fit(
         [target, context],
         labels,
