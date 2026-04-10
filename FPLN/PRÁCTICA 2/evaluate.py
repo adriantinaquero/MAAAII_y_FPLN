@@ -77,7 +77,7 @@ def visualize_tsne_embeddings(words, embeddings, word_index, titulo, filename=No
         plt.show()
 
 
-def visualize_all_tsne_embeddings(embeddings, word_index, words_to_plot, titulo, words_to_label=None, filename=None):
+def visualize_all_tsne_embeddings(words_to_plot, embeddings, word_index, titulo, words_to_label=None, filename=None):
     """
     Visualizes t-SNE embeddings of selected words with optional labeling.
 

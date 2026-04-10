@@ -17,7 +17,7 @@ if __name__=="__main__":
 
     # CBOW
     # creamos y entrenamos el modelo
-    embeddings_untrained, embeddings_trained = cbow.train_cbow_model(train_sequences, test_sequences, vocab_size, window_size=5, batch_size=128, epochs=5)
+    embeddings_untrained, embeddings_trained = cbow.train_cbow_model(train_sequences, test_sequences, vocab_size, window_size=5, batch_size=128, epochs=15)
 
     # visualizamos los embeddings antes y después del entrenamiento
     evaluate.visualize_tsne_embeddings(target_words, embeddings_untrained, word_index, "Embeddings CBOW antes del entrenamiento")
