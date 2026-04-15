@@ -1,0 +1,94 @@
+from robobosim.RoboboSim import RoboboSim   
+from robobopy.Robobo import Robobo          
+from robobopy.utils.IR import IR
+from Behavior import Behavior
+
+
+class SeguirCarril(Behavior):
+    def __init__(self, robobo, supress_list, params, velocidad=15, kp=0.8, ki=0.01, kd=0.3):
+            super().__init__(robobo, supress_list, params)
+            self.velocidad = velocidad
+            self.kp = kp
+            self.ki = ki
+            self.kd = kd
+            
+            self.prev_error = 0
+            self.integral = 0
+    def take_control(self):     # en principio siempre está activo
+        if not self.is_supressed:
+            return True 
+
+    def action(self):
+            self.supress = False
+            for behavior in self.supress_list:
+                behavior.is_supressed = True
+
+            ir_izq = self.robobo.readIRSensor(IR.FrontLL)
+            ir_der = self.robobo.readIRSensor(IR.FrontRR)
+
+            error = ir_der - ir_izq
+            P = self.kp * error
+
+            self.integral += error
+            I = self.ki * self.integral
+
+            D = self.kd * (error - self.prev_error)
+            self.prev_error = error
+
+            correccion = round(P + I + D)
+
+            vel_izq = self.velocidad + correccion
+            vel_der = self.velocidad - correccion
+
+            vel_izq = max(min(vel_izq, 40), -40)
+            vel_der = max(min(vel_der, 40), -40)
+
+            self.robobo.moveWheels(vel_izq, vel_der)
+
+            for behavior in self.supress_list:
+                behavior.is_supressed = False
+
+
+
+
+
+def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: float = 0.3, prev_error = 0, integral = 0):
+    
+    ir_izq = robobo.readIRSensor(IR.FrontLL)
+    ir_der = robobo.readIRSensor(IR.FrontRR)
+
+    error = ir_der - ir_izq
+    P = kp * error
+    
+    integral += error
+    I = ki * integral
+    
+    D = kd * (error - prev_error)
+    prev_error = error
+
+    correccion = round(P + I + D)
+
+    vel_izq = velocidad + correccion
+    vel_der = velocidad - correccion
+
+    # limitamos velocidad
+    vel_izq = max(min(vel_izq, 40), -40)
+    vel_der = max(min(vel_der, 40), -40)
+
+    robobo.moveWheels(vel_izq, vel_der)
+
+
+
+
+
+if __name__=="__main__":
+    IP = "localhost"
+
+    sim = RoboboSim(IP) # conexión al simulador
+    sim.connect()
+
+    robobo = Robobo(IP) # conexión al robobo
+    robobo.connect()
+
+    robobo.moveWheelsByTime(10, 10, 1)
+    seguir_carril(velocidad=15, kp=2, ki=0.02, kd=0.2)
