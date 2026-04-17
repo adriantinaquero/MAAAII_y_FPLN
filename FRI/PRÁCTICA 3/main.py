@@ -1,7 +1,8 @@
 from robobopy.Robobo import Robobo
-from EvitarColisiones import EvitarColisiones
 from SeguirCarril import SeguirCarril
 from LeerQR import LeerQR
+from RecargarBateria import RecargarBateria
+from EvitarColisiones import EvitarColisiones
 import time
 
 
@@ -15,14 +16,16 @@ def main():
     # creamos de los comportamientos
     seguir_carril_comportamiento = SeguirCarril(robobo, [], params)
     leer_qr_comportamiento = LeerQR(robobo, [seguir_carril_comportamiento], params)
+    recargar_bateria_comportamiento = RecargarBateria(robobo, [leer_qr_comportamiento, seguir_carril_comportamiento], params)
     evitar_colisiones_comportamiento = EvitarColisiones(robobo, [seguir_carril_comportamiento, leer_qr_comportamiento], params)
 
     # lista con todos los comportamientos
-    threads = [seguir_carril_comportamiento, leer_qr_comportamiento, evitar_colisiones_comportamiento]
+    threads = [seguir_carril_comportamiento, leer_qr_comportamiento, recargar_bateria_comportamiento, evitar_colisiones_comportamiento]
 
     # iniciamos todos los comportamientos
     seguir_carril_comportamiento.start()
     leer_qr_comportamiento.start()
+    recargar_bateria_comportamiento.start()
     evitar_colisiones_comportamiento.start()
 
     # el hilo princimal se mantiene en espera hasta que algún comportamiento marca el objetivo como terminado
