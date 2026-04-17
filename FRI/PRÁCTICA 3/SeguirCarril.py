@@ -53,29 +53,30 @@ class SeguirCarril(Behavior):
 
 
 def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: float = 0.3, prev_error = 0, integral = 0):
-    
-    ir_izq = robobo.readIRSensor(IR.FrontLL)
-    ir_der = robobo.readIRSensor(IR.FrontRR)
 
-    error = ir_der - ir_izq
-    P = kp * error
-    
-    integral += error
-    I = ki * integral
-    
-    D = kd * (error - prev_error)
-    prev_error = error
+    while True:
+        # ir_izq = robobo.readIRSensor(IR.FrontLL)
+        ir_der = robobo.readIRSensor(IR.FrontRR)
 
-    correccion = round(P + I + D)
+        error = ir_der - 60      # 60 es la distancia a la que debe mantenerse de la línea del carril
+        P = kp * error
+        
+        integral += error
+        I = ki * integral
+        
+        D = kd * (error - prev_error)
+        prev_error = error
 
-    vel_izq = velocidad + correccion
-    vel_der = velocidad - correccion
+        correccion = round(P + I + D)
 
-    # limitamos velocidad
-    vel_izq = max(min(vel_izq, 40), -40)
-    vel_der = max(min(vel_der, 40), -40)
+        vel_izq = velocidad - correccion
+        vel_der = velocidad + correccion
 
-    robobo.moveWheels(vel_izq, vel_der)
+        # # limitamos velocidad
+        # vel_izq = max(min(vel_izq, 10), -10)
+        # vel_der = max(min(vel_der, 10), -10)
+
+        robobo.moveWheels(vel_izq, vel_der)
 
 
 
@@ -84,11 +85,10 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
 if __name__=="__main__":
     IP = "localhost"
 
-    sim = RoboboSim(IP) # conexión al simulador
-    sim.connect()
+    # sim = RoboboSim(IP) # conexión al simulador
+    # sim.connect()
 
     robobo = Robobo(IP) # conexión al robobo
     robobo.connect()
 
-    robobo.moveWheelsByTime(10, 10, 1)
-    seguir_carril(velocidad=15, kp=2, ki=0.02, kd=0.2)
+    seguir_carril(velocidad=15, kp=0.024, ki=0.0001, kd=0.5)
