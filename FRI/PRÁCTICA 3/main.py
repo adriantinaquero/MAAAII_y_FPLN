@@ -7,7 +7,7 @@ import time
 
 
 def main():
-    robobo = Robobo("localhost")
+    robobo = Robobo("172.20.10.14")
     robobo.connect()
 
     # diccionario que se pasará a los comportamientos para que lo activen cuando se finalice la misión
@@ -16,8 +16,8 @@ def main():
     # creamos de los comportamientos
     seguir_carril_comportamiento = SeguirCarril(robobo, [], params)
     leer_qr_comportamiento = LeerQR(robobo, [seguir_carril_comportamiento], params)
-    recargar_bateria_comportamiento = RecargarBateria(robobo, [leer_qr_comportamiento, seguir_carril_comportamiento], params)
-    evitar_colisiones_comportamiento = EvitarColisiones(robobo, [seguir_carril_comportamiento, leer_qr_comportamiento], params)
+    recargar_bateria_comportamiento = RecargarBateria(robobo, [seguir_carril_comportamiento, leer_qr_comportamiento, ], params)
+    evitar_colisiones_comportamiento = EvitarColisiones(robobo, [seguir_carril_comportamiento, leer_qr_comportamiento, recargar_bateria_comportamiento], params)
 
     # lista con todos los comportamientos
     threads = [seguir_carril_comportamiento, leer_qr_comportamiento, recargar_bateria_comportamiento, evitar_colisiones_comportamiento]

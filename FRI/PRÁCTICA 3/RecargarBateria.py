@@ -18,16 +18,17 @@ class RecargarBateria(Behavior):
         self.prev_error = 0
         self.integral = 0
 
+        self.robobo.setActiveBlobs(True, False, False, False)
+        self.robobo.whenATapIsDetected(self.tapDetectedCallback)
         self.tap_detected = False
 
     def tapDetectedCallback(self):
         self.tap_detected = True
 
     def take_control(self):
-        if self.robobo.whenATapIsDetected(self.tapDetectedCallback):     # no sé si whenATapIsDetected sirve para esto
-            if self.tap_detected:
-                self.tap_detected = False       # reseteamos la variable para la próxima vez
-                return True
+        if self.tap_detected:
+            self.tap_detected = False       # reseteamos la variable para la próxima vez
+            return True
         return False
 
     def action(self):
@@ -40,9 +41,10 @@ class RecargarBateria(Behavior):
         
         self.robobo.moveTiltTo(105, 5, True)
 
+        self.robobo.sayText("RECARGANDO")
         while not self.is_supressed:
             self.robobo.wait(0.4)
-            color = self.robobo.readColorBlob(Color.GREEN)
+            color = self.robobo.readColorBlob(Color.RED)
             ir = self.robobo.readIRSensor(IR.FrontC)
 
             if color and color.size > 0:
@@ -63,11 +65,10 @@ class RecargarBateria(Behavior):
                     xcorrection = round(self.kp * xerror + self.integral * self.ki + der * self.kd)
                     self.prev_error = xerror
                     
-                    robobo.sayText(f"Corr: {xcorrection} | Error: {xerror} | Pos: {color.posx}")
-                    self.robobo.moveWheels(xcorrection, -xcorrection)
+                    self.robobo.moveWheels(-xcorrection, xcorrection)
             else:
                 # si no ve el color, lo busca girando
-                self.robobo.moveTiltTo(105, 5)
+                self.robobo.moveTiltTo(95, 5)
                 self.robobo.moveWheels(5, -5)
 
         # Liberar otros comportamientos al terminar
@@ -86,7 +87,7 @@ def recargar_bateria(zgoal: int = 50, xgoal: int = 50, kp: float = 0.5):
     kd = 0.1
     while True:
         robobo.wait(0.4)
-        color = robobo.readColorBlob(Color.YELLOW)
+        color = robobo.readColorBlob(Color.RED)
         ir = robobo.readIRSensor(IR.FrontC)
         if color.size > 0:
             if color.posx in range(45, 55):

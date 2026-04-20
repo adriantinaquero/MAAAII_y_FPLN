@@ -27,16 +27,19 @@ class LeerQR(Behavior):
         for behavior in self.supress_list:
              behavior.is_supressed = True
 
-        qr = self.ultimo_qr_visto
+
+        self.robobo.sayText("LEYENDO")
         
-        if qr.id == "peligro izquierda":
-            self.robobo.stopMotors()
-            self.robobo.sayText("PELIGRO")
+        # qr = self.ultimo_qr_visto
+        
+        # if qr.id == "peligro izquierda":
+        #     self.robobo.stopMotors()
+        #     self.robobo.sayText("PELIGRO")
             
-        elif qr.id == "autobus":
-            self.robobo.setLedColorTo(LED.All, Color.GREEN)
-            self.robobo.sayText("AUTOBUS")
-            self.robobo.moveWheelsByTime(30, 30, 2)
+        # elif qr.id == "autobus":
+        #     self.robobo.setLedColorTo(LED.All, Color.GREEN)
+        #     self.robobo.sayText("AUTOBUS")
+        #     self.robobo.moveWheelsByTime(30, 30, 2)
 
         for behavior in self.supress_list:
             behavior.is_supressed = False
