@@ -86,7 +86,7 @@ def recargar_bateria(zgoal: int = 50, xgoal: int = 50, kp: float = 0.5):
     kd = 0.1
     while True:
         robobo.wait(0.4)
-        color = robobo.readColorBlob(Color.YELLOW)
+        color = robobo.readColorBlob(Color.GREEN)
         ir = robobo.readIRSensor(IR.FrontC)
         if color.size > 0:
             if color.posx in range(45, 55):
@@ -122,10 +122,10 @@ if __name__=="__main__":
     robobo.connect()
 
 
-    # recargar_bateria()
+    recargar_bateria()
 
-    while True:
-        robobo.moveTiltTo(105, 5, True)
-        robobo.moveWheelsByTime(10, -10, 3.25)
-        robobo.moveWheelsByTime(15, 15, 7)
-        robobo.whenATapIsDetected(recargar_bateria())
+    # while True:
+    #     robobo.moveTiltTo(105, 5, True)
+    #     robobo.moveWheelsByTime(10, -10, 3.25)
+    #     robobo.moveWheelsByTime(15, 15, 7)
+    #     robobo.whenATapIsDetected(recargar_bateria())

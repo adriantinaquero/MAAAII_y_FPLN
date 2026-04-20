@@ -1,10 +1,10 @@
 import torch
 from torch.utils.data import DataLoader, random_split
 import torchvision.transforms as transforms
-from dataset import Ship
+from dataset import ShipData
 
 
-def load_dataset(route: str, batch_size) -> tuple:
+def load_dataset(route: str, batch_size, train_size=0.7, val_size=0.15) -> tuple:
 
     transform_basic = transforms.Compose([
         transforms.ToPILImage(),
@@ -18,19 +18,18 @@ def load_dataset(route: str, batch_size) -> tuple:
         transforms.ToPILImage(),
         transforms.Resize((224, 224)),
         transforms.Pad(4),
-        transforms.RandomAffine(degrees=15, translate=(0.2, 0.2), scale=(0.75,1.25), shear=15),
-        transforms.ColorJitter(brightness=(0.2,0.8), contrast=(0.2, 0.8)),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
         transforms.ToTensor(),
         transforms.Normalize(mean=0.5,
           std=0.225),
     ])
 
-    dataset_basic = Ship(route, transform_basic)
-    dataset_aug = Ship(route, transform_aug)
+    dataset_basic = ShipData(route, transform_basic)
+    dataset_aug = ShipData(route, transform_aug)
     dataset_size = len(dataset_basic)
 
-    train_size = int(0.7 * dataset_size)
-    val_size = int(0.15 * dataset_size)
+    train_size = int(train_size * dataset_size)
+    val_size = int(val_size * dataset_size)
     test_size = dataset_size - (train_size + val_size)
 
     train_basic, val_data, test_data = random_split(
@@ -54,7 +53,7 @@ def load_dataset(route: str, batch_size) -> tuple:
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    a = load_dataset("VCA/PRÁCTICA 1/dataset/ship.csv", 180)
+    a = load_dataset("VCA/PRÁCTICA 1/dataset/ship.csv", 1580)
     for i, p in a[0]:
         for j, k in zip(i, p):
             plt.imshow(j.permute(1, 2, 0).numpy(), vmin=0, vmax=1)       # permute para pasar de [C, H, W] a [H, W, C] 

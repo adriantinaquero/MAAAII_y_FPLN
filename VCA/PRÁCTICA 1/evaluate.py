@@ -47,10 +47,15 @@ def evaluate_model(model, test_loader, history, device, num_classes=2):
 
         sensitivity = TP / (TP + FN)
         specificity = TN / (TN + FP)
-
-        print(f"Clase {i}:             "
-              f"Sensibilidad={sensitivity:.4f}         "
-              f"Especificidad={specificity:.4f}")
+        precision = TP / (TP + FP)
+        vpn = TN / (TN + FN)
+        f1_score = (2 * sensitivity * precision) / (sensitivity + precision)
+        print(f"Clase {i}:\t"
+              f"Sensibilidad={sensitivity:.4f}\t"
+              f"Especificidad={specificity:.4f}\t"
+              f"Precisión={precision:.4f}\t"
+              f"VPN={vpn:.4f}\t"
+              f"F1={f1_score}")
 
     epochs = len(history["val_loss"])
     val_range = range(1, epochs + 1)
