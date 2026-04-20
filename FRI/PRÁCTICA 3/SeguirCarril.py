@@ -63,8 +63,8 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
     integral = 0
     try:
         while True:
-            robobo.wait(0.3)
-            frame = videoStream.getImage()[440:640, :, :]
+            robobo.wait(0.4)
+            frame = videoStream.getImage()[140:340, :, :]
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             h, w = np.shape(gray)
 
@@ -83,7 +83,6 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
                         centers.append(center)
 
             lane_center = np.mean(centers)
-            vp = centers[-1]
 
             # cv2.line(frame, (w // 2, 0), (w // 2, 640), (0, 0, 255))
             # for (x, h) in zip(centers, range(0, h, 2)):
@@ -92,13 +91,13 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
             # cv2.imshow("robobo", frame)
             # if cv2.waitKey(1) & 0xFF == ord('q'):
             #     break
+
             error = int(lane_center - image_center)
             print(error)
-            robobo.movePanTo(error, 20)
             if error in range(-10, 10): # En caso de estar en el rango adecuado activamos el controlador proporcional
-                robobo.moveWheels(10, 10)
+                robobo.moveWheels(5, 5)
             else: # En otro caso activamos el PID
-                xerror = error if abs(error) > 3 else 0 # Limitamos ligeramente el rango objetivo para evitar bloqueos irresolubles
+                xerror = error # Limitamos ligeramente el rango objetivo para evitar bloqueos irresolubles
                 der = xerror - prev_err
                 prev_err = xerror # Calculamos los valores necesarios para el PID
                 integral += xerror
@@ -116,9 +115,9 @@ if __name__== "__main__":
     # sim = RoboboSim(IP) # conexión al simulador
     # sim.connect()
     
-    videoStream = RoboboVideo("localhost")  
+    videoStream = RoboboVideo("localhost")
     robobo = Robobo(IP) # conexión al robobo
     robobo.connect()
     robobo.startStream()
     robobo.moveTiltTo(105, 20)
-    seguir_carril(velocidad=5, kp=0.2, ki=0, kd=0)
+    seguir_carril(velocidad=5, kp=0.2, ki=0.02, kd=0)
