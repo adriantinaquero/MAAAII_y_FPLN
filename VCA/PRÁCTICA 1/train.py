@@ -22,8 +22,8 @@ def train_model(model, train_loader, val_loader, test_loader, device, epochs=5):
     for epoch in range(epochs):
 
         model.train()
-        training_losses = []
-        training_accs = []
+        train_loss = 0
+        train_acc = 0
         correct = 0
         total = 0
 
@@ -42,16 +42,16 @@ def train_model(model, train_loader, val_loader, test_loader, device, epochs=5):
 
 
             size = labels.size(0)
-            train_loss = loss.item()
-            train_acc = (preds == labels).sum().item() / size
+            train_loss += loss.item()
+            correct += (preds == labels).sum().item()
+            total += size
 
-            print(f"Epoch {epoch + 1}/{epochs} | "
-            f"Batch {i + 1}/{len(train_loader)} | "
-            f"Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | "
-            f"Train Acc: {train_acc:.4f} | Val Acc: {val_acc:.4f}")
+        train_loss = train_loss / len(train_loader)
+        train_acc = correct / total
 
-            training_losses.append(train_loss)
-            training_accs.append(train_acc)
+        print(f"Epoch {epoch + 1}/{epochs} | "
+        f"Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | "
+        f"Train Acc: {train_acc:.4f} | Val Acc: {val_acc:.4f}")
 
         model.eval()
         correct = 0
@@ -76,8 +76,8 @@ def train_model(model, train_loader, val_loader, test_loader, device, epochs=5):
         val_loss /= len(val_loader)
         val_acc = correct / total
 
-        history["train_loss"] += training_losses
-        history["train_acc"] += (training_accs)
+        history["train_loss"].append(train_loss)
+        history["train_acc"].append(train_acc)
         history["val_loss"].append(val_loss)
         history["val_acc"].append(val_acc)
 
