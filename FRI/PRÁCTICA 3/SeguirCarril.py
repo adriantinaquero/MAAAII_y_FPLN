@@ -1,7 +1,12 @@
 from robobosim.RoboboSim import RoboboSim   
 from robobopy.Robobo import Robobo          
-from robobopy.utils.IR import IR
 from Behavior import Behavior
+from robobopy.utils.IR import IR
+from robobopy_videostream.RoboboVideo import RoboboVideo 
+from robobopy.Robobo import Robobo 
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 class SeguirCarril(Behavior):
@@ -53,42 +58,67 @@ class SeguirCarril(Behavior):
 
 
 def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: float = 0.3, prev_error = 0, integral = 0):
+    videoStream.connect()
+    prev_err = 0 # Inicializamos las variables necesarias para el PID
+    integral = 0
+    try:
+        while True:
+            robobo.wait(0.3)
+            frame = videoStream.getImage()[440:640, :, :]
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            h, w = np.shape(gray)
 
-    while True:
-        # ir_izq = robobo.readIRSensor(IR.FrontLL)
-        ir_der = robobo.readIRSensor(IR.FrontRR)
+            centers = []
 
-        error = ir_der - 60      # 60 es la distancia a la que debe mantenerse de la línea del carril
-        P = kp * error
-        
-        integral += error
-        I = ki * integral
-        
-        D = kd * (error - prev_error)
-        prev_error = error
+            image_center = w / 2
 
-        correccion = round(P + I + D)
+            for i in range(0, h, 2):
+                xs = np.where((gray[i] > 127))[0]
+                
+                if len(xs) > 0:
+                    xs_izq = xs[xs < image_center]
+                    xs_der = xs[xs >= image_center]
+                    if len(xs_der) > 0 and len(xs_izq) > 0:
+                        center = (np.max(xs_izq) + np.min(xs_der)) // 2
+                        centers.append(center)
 
-        vel_izq = velocidad - correccion
-        vel_der = velocidad + correccion
+            lane_center = np.mean(centers)
+            vp = centers[-1]
 
-        # # limitamos velocidad
-        # vel_izq = max(min(vel_izq, 10), -10)
-        # vel_der = max(min(vel_der, 10), -10)
+            # cv2.line(frame, (w // 2, 0), (w // 2, 640), (0, 0, 255))
+            # for (x, h) in zip(centers, range(0, h, 2)):
+            #     cv2.circle(frame, (int(x), int(h)), 3, (0, 255, 0), -1)
+    
+            # cv2.imshow("robobo", frame)
+            # if cv2.waitKey(1) & 0xFF == ord('q'):
+            #     break
+            error = int(lane_center - image_center)
+            print(error)
+            robobo.movePanTo(error, 20)
+            if error in range(-10, 10): # En caso de estar en el rango adecuado activamos el controlador proporcional
+                robobo.moveWheels(10, 10)
+            else: # En otro caso activamos el PID
+                xerror = error if abs(error) > 3 else 0 # Limitamos ligeramente el rango objetivo para evitar bloqueos irresolubles
+                der = xerror - prev_err
+                prev_err = xerror # Calculamos los valores necesarios para el PID
+                integral += xerror
+                xcorrection = round(kp * xerror + integral * ki + der * kd)
+                robobo.moveWheels(-xcorrection, xcorrection) # Aplicamos la correcion del PID {Si la corre
+    finally:
+        cv2.destroyAllWindows() 
+        videoStream.disconnect()
 
-        robobo.moveWheels(vel_izq, vel_der)
 
 
-
-
-
-if __name__=="__main__":
+if __name__== "__main__":
     IP = "localhost"
 
     # sim = RoboboSim(IP) # conexión al simulador
     # sim.connect()
-
+    
+    videoStream = RoboboVideo("localhost")  
     robobo = Robobo(IP) # conexión al robobo
     robobo.connect()
-
-    seguir_carril(velocidad=15, kp=0.024, ki=0.0001, kd=0.5)
+    robobo.startStream()
+    robobo.moveTiltTo(105, 20)
+    seguir_carril(velocidad=5, kp=0.2, ki=0, kd=0)
