@@ -19,6 +19,7 @@ class SeguirCarril(Behavior):
             
             self.prev_error = 0
             self.integral = 0
+
     def take_control(self):     # en principio siempre está activo
         if not self.is_supressed:
             return True 
@@ -30,6 +31,7 @@ class SeguirCarril(Behavior):
 
             self.robobo.moveWheels(5, 5)
             self.robobo.sayText("SIGUIENDO")
+
             # ir_izq = self.robobo.readIRSensor(IR.FrontLL)
             # ir_der = self.robobo.readIRSensor(IR.FrontRR)
 
