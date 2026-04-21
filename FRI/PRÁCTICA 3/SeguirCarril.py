@@ -28,27 +28,29 @@ class SeguirCarril(Behavior):
             for behavior in self.supress_list:
                 behavior.is_supressed = True
 
-            ir_izq = self.robobo.readIRSensor(IR.FrontLL)
-            ir_der = self.robobo.readIRSensor(IR.FrontRR)
+            self.robobo.moveWheels(5, 5)
+            self.robobo.sayText("SIGUIENDO")
+            # ir_izq = self.robobo.readIRSensor(IR.FrontLL)
+            # ir_der = self.robobo.readIRSensor(IR.FrontRR)
 
-            error = ir_der - ir_izq
-            P = self.kp * error
+            # error = ir_der - ir_izq
+            # P = self.kp * error
 
-            self.integral += error
-            I = self.ki * self.integral
+            # self.integral += error
+            # I = self.ki * self.integral
 
-            D = self.kd * (error - self.prev_error)
-            self.prev_error = error
+            # D = self.kd * (error - self.prev_error)
+            # self.prev_error = error
 
-            correccion = round(P + I + D)
+            # correccion = round(P + I + D)
 
-            vel_izq = self.velocidad + correccion
-            vel_der = self.velocidad - correccion
+            # vel_izq = self.velocidad + correccion
+            # vel_der = self.velocidad - correccion
 
-            vel_izq = max(min(vel_izq, 40), -40)
-            vel_der = max(min(vel_der, 40), -40)
+            # vel_izq = max(min(vel_izq, 40), -40)
+            # vel_der = max(min(vel_der, 40), -40)
 
-            self.robobo.moveWheels(vel_izq, vel_der)
+            # self.robobo.moveWheels(vel_izq, vel_der)
 
             for behavior in self.supress_list:
                 behavior.is_supressed = False
@@ -109,8 +111,10 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
 
 
 
-if __name__== "__main__":
-    IP = "localhost"
+
+
+if __name__=="__main__":
+    IP = "172.20.10.14"
 
     # sim = RoboboSim(IP) # conexión al simulador
     # sim.connect()

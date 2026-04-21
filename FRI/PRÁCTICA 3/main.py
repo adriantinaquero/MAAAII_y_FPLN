@@ -7,7 +7,7 @@ import time
 
 
 def main():
-    robobo = Robobo("192.168.1.131")
+    robobo = Robobo("172.20.10.14")
     robobo.connect()
 
     # diccionario que se pasará a los comportamientos para que lo activen cuando se finalice la misión

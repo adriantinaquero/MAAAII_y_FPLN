@@ -20,8 +20,9 @@ class EvitarColisiones(Behavior):
         for behavior in self.supress_list:
              behavior.is_supressed = True
 
-        self.robobo.moveWheelsByTime(-10, -10, 2)   # se movería hacia atras y giraría
-        self.robobo.moveWheelsByTime(15, -15, 1) 
+        self.robobo.sayText("EVITANDO")
+        self.robobo.moveWheelsByTime(-10, -10, 2)   # se mueve hacia atras y gira
+        self.robobo.moveWheelsByTime(15, -15, 1)
 
         for behavior in self.supress_list:
             behavior.is_supressed = False
