@@ -5,12 +5,13 @@ from robobopy.utils.Color import Color
 from Behavior import Behavior
 
 class RecargarBateria(Behavior):
-    def __init__(self, robobo, supress_list, params, velocidad=15, kp=0.8, ki=0.01, kd=0.3):
+    def __init__(self, robobo, supress_list, params, velocidad=15, kp=0.5, ki=0.02, kd=0.1, kp2=0.1):
         super().__init__(robobo, supress_list, params)
         self.velocidad = velocidad
         self.kp = kp
         self.ki = ki
         self.kd = kd
+        self.kp2 = kp2
         
         self.xgoal = 50   
         self.zgoal = 50   
@@ -39,6 +40,7 @@ class RecargarBateria(Behavior):
         self.prev_error = 0
         self.integral = 0
         
+        self.robobo.stopMotors()
         self.robobo.moveTiltTo(105, 5, True)
 
         self.robobo.sayText("RECARGANDO")
@@ -62,7 +64,7 @@ class RecargarBateria(Behavior):
                     der = xerror - self.prev_error
                     self.integral += xerror
                     
-                    xcorrection = round(self.kp * xerror + self.integral * self.ki + der * self.kd)
+                    xcorrection = round(self.kp2 * xerror + self.integral * self.ki + der * self.kd)
                     self.prev_error = xerror
                     
                     self.robobo.moveWheels(-xcorrection, xcorrection)
@@ -104,7 +106,7 @@ def recargar_bateria(zgoal: int = 50, xgoal: int = 50, kp: float = 0.5):
                 xcorrection = round(kp2 * xerror + integral * ki + der * kd)
                 integral += xerror
                 print(xcorrection, kp2 * xerror, integral * ki, der * kd, color.posx)
-                robobo.moveWheels(xcorrection, -xcorrection)
+                robobo.moveWheels(-xcorrection, xcorrection)
         else:
             robobo.moveTiltTo(105, 5)
             robobo.moveWheels(5, -5)

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 
 class SeguirCarril(Behavior):
-    def __init__(self, robobo, supress_list, params, velocidad=15, kp=0.8, ki=0.01, kd=0.3):
+    def __init__(self, robobo, supress_list, params, velocidad=15, kp=0.23, ki=0, kd=0.8):
             super().__init__(robobo, supress_list, params)
             self.velocidad = velocidad
             self.kp = kp
@@ -29,13 +29,13 @@ class SeguirCarril(Behavior):
             for behavior in self.supress_list:
                 behavior.is_supressed = True
 
-            self.robobo.moveWheels(5, 5)
+            self.robobo.moveWheels(15, 15)
             self.robobo.sayText("SIGUIENDO")
 
-            # ir_izq = self.robobo.readIRSensor(IR.FrontLL)
-            # ir_der = self.robobo.readIRSensor(IR.FrontRR)
+            ir_izq = self.robobo.readIRSensor(IR.FrontLL)
+            ir_der = self.robobo.readIRSensor(IR.FrontRR)
 
-            # error = ir_der - ir_izq
+            # error = ir_der - 55
             # P = self.kp * error
 
             # self.integral += error
@@ -49,8 +49,8 @@ class SeguirCarril(Behavior):
             # vel_izq = self.velocidad + correccion
             # vel_der = self.velocidad - correccion
 
-            # vel_izq = max(min(vel_izq, 40), -40)
-            # vel_der = max(min(vel_der, 40), -40)
+            # # vel_izq = max(min(vel_izq, 40), -40)
+            # # vel_der = max(min(vel_der, 40), -40)
 
             # self.robobo.moveWheels(vel_izq, vel_der)
 

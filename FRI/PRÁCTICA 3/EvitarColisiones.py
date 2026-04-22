@@ -2,8 +2,6 @@ from robobopy.utils.IR import IR
 from Behavior import Behavior        
     
 
-# NO DEBERÍAMOS UTILIZAR MOVEWHEELSBYTIME, YA QUE BLOQUEA LOS HILOS DURANTE ESTE TIME
-
 
 class EvitarColisiones(Behavior):
     def __init__(self, robot, supress_list, params):
@@ -21,8 +19,10 @@ class EvitarColisiones(Behavior):
              behavior.is_supressed = True
 
         self.robobo.sayText("EVITANDO")
-        self.robobo.moveWheelsByTime(-10, -10, 2)   # se mueve hacia atras y gira
+        self.robobo.moveWheelsByTime(-10, -10, 2)
         self.robobo.moveWheelsByTime(15, -15, 1)
+        self.robobo.moveWheelsByTime(10, 10, 4)
+        self.robobo.moveWheelsByTime(-15, 15, 1)
 
         for behavior in self.supress_list:
             behavior.is_supressed = False

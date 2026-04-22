@@ -3,9 +3,6 @@ from robobopy.utils.Color import Color
 from Behavior import Behavior        
 
 
-# NO DEBERÍAMOS UTILIZAR MOVEWHEELSBYTIME, YA QUE BLOQUEA LOS HILOS DURANTE ESTE TIME
-
-
 class LeerQR(Behavior):
     def __init__(self, robobo, supress_list, params):
         super().__init__(robobo, supress_list, params)
@@ -27,14 +24,15 @@ class LeerQR(Behavior):
         for behavior in self.supress_list:
              behavior.is_supressed = True
 
+        # self.robobo.sayText("LEYENDO")
+        
+        qr = self.ultimo_qr_visto
+        
+        self.robobo.sayText(qr.id)
 
-        self.robobo.sayText("LEYENDO")
-        
-        # qr = self.ultimo_qr_visto
-        
         # if qr.id == "peligro izquierda":
         #     self.robobo.stopMotors()
-        #     self.robobo.sayText("PELIGRO")
+        #     self.robobo.sayText("CURVA PELIGROSA A LA IZQUIERDA")
             
         # elif qr.id == "autobus":
         #     self.robobo.setLedColorTo(LED.All, Color.GREEN)
