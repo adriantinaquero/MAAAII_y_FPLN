@@ -64,7 +64,7 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
     try:
         while True:
             robobo.wait(0.4)
-            frame = videoStream.getImage()[140:340, :, :]
+            frame = videoStream.getImage()[340:640, :, :]
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             h, w = np.shape(gray)
 
@@ -84,13 +84,13 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
 
             lane_center = np.mean(centers)
 
-            # cv2.line(frame, (w // 2, 0), (w // 2, 640), (0, 0, 255))
-            # for (x, h) in zip(centers, range(0, h, 2)):
-            #     cv2.circle(frame, (int(x), int(h)), 3, (0, 255, 0), -1)
+            cv2.line(frame, (w // 2, 0), (w // 2, 640), (0, 0, 255))
+            for (x, h) in zip(centers, range(0, h, 2)):
+                cv2.circle(frame, (int(x), int(h)), 3, (0, 255, 0), -1)
     
-            # cv2.imshow("robobo", frame)
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
-            #     break
+            cv2.imshow("robobo", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
             error = int(lane_center - image_center)
             print(error)
@@ -104,6 +104,8 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
                 xcorrection = round(kp * xerror + integral * ki + der * kd)
                 robobo.moveWheels(-xcorrection, xcorrection) # Aplicamos la correcion del PID {Si la corre
     finally:
+        robobo.stopMotors()
+        robobo.disconnect()
         cv2.destroyAllWindows() 
         videoStream.disconnect()
 

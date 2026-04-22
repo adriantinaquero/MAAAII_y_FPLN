@@ -10,8 +10,8 @@ if __name__ == "__main__":
     print("Using device:", device)
     if len(sys.argv) != 3:
         print("Usage: python execute_test.py modelpath datasetpath")
-        modelpath = "VCA/PRÁCTICA 1/checkpoints/DOCKED_NO_PREENTRENADA_CON_AUGMENTATION.pth"
-        datasetpath = "None" 
+        modelpath = "VCA/PRÁCTICA 1/checkpoints/PREENTRENADA_SIN_AUGMENTATION.pth"
+        datasetpath = "VCA/PRÁCTICA 1/P1-test-images/ship.csv" 
         print(f"Using default paths modelpath: {modelpath}, datasetpath: {datasetpath}")
     else:
         modelpath, datasetpath = sys.argv[1], sys.argv[2]
