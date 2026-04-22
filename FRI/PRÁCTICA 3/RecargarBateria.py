@@ -5,12 +5,13 @@ from robobopy.utils.Color import Color
 from Behavior import Behavior
 
 class RecargarBateria(Behavior):
-    def __init__(self, robobo, supress_list, params, velocidad=15, kp=0.8, ki=0.01, kd=0.3):
+    def __init__(self, robobo, supress_list, params, velocidad=15, kp=0.5, ki=0.02, kd=0.1, kp2=0.1):
         super().__init__(robobo, supress_list, params)
         self.velocidad = velocidad
         self.kp = kp
         self.ki = ki
         self.kd = kd
+        self.kp2 = kp2
         
         self.xgoal = 50   
         self.zgoal = 50   
@@ -18,16 +19,17 @@ class RecargarBateria(Behavior):
         self.prev_error = 0
         self.integral = 0
 
+        self.robobo.setActiveBlobs(True, False, False, False)
+        self.robobo.whenATapIsDetected(self.tapDetectedCallback)
         self.tap_detected = False
 
     def tapDetectedCallback(self):
         self.tap_detected = True
 
     def take_control(self):
-        if self.robobo.whenATapIsDetected(self.tapDetectedCallback):     # no sé si whenATapIsDetected sirve para esto
-            if self.tap_detected:
-                self.tap_detected = False       # reseteamos la variable para la próxima vez
-                return True
+        if self.tap_detected:
+            self.tap_detected = False       # reseteamos la variable para la próxima vez
+            return True
         return False
 
     def action(self):
@@ -38,11 +40,13 @@ class RecargarBateria(Behavior):
         self.prev_error = 0
         self.integral = 0
         
+        self.robobo.stopMotors()
         self.robobo.moveTiltTo(105, 5, True)
 
+        self.robobo.sayText("RECARGANDO")
         while not self.is_supressed:
             self.robobo.wait(0.4)
-            color = self.robobo.readColorBlob(Color.GREEN)
+            color = self.robobo.readColorBlob(Color.RED)
             ir = self.robobo.readIRSensor(IR.FrontC)
 
             if color and color.size > 0:
@@ -60,14 +64,13 @@ class RecargarBateria(Behavior):
                     der = xerror - self.prev_error
                     self.integral += xerror
                     
-                    xcorrection = round(self.kp * xerror + self.integral * self.ki + der * self.kd)
+                    xcorrection = round(self.kp2 * xerror + self.integral * self.ki + der * self.kd)
                     self.prev_error = xerror
                     
-                    robobo.sayText(f"Corr: {xcorrection} | Error: {xerror} | Pos: {color.posx}")
-                    self.robobo.moveWheels(xcorrection, -xcorrection)
+                    self.robobo.moveWheels(-xcorrection, xcorrection)
             else:
                 # si no ve el color, lo busca girando
-                self.robobo.moveTiltTo(105, 5)
+                self.robobo.moveTiltTo(95, 5)
                 self.robobo.moveWheels(5, -5)
 
         # Liberar otros comportamientos al terminar
@@ -86,7 +89,7 @@ def recargar_bateria(zgoal: int = 50, xgoal: int = 50, kp: float = 0.5):
     kd = 0.1
     while True:
         robobo.wait(0.4)
-        color = robobo.readColorBlob(Color.GREEN)
+        color = robobo.readColorBlob(Color.RED)
         ir = robobo.readIRSensor(IR.FrontC)
         if color.size > 0:
             if color.posx in range(45, 55):
@@ -103,7 +106,7 @@ def recargar_bateria(zgoal: int = 50, xgoal: int = 50, kp: float = 0.5):
                 xcorrection = round(kp2 * xerror + integral * ki + der * kd)
                 integral += xerror
                 print(xcorrection, kp2 * xerror, integral * ki, der * kd, color.posx)
-                robobo.moveWheels(xcorrection, -xcorrection)
+                robobo.moveWheels(-xcorrection, xcorrection)
         else:
             robobo.moveTiltTo(105, 5)
             robobo.moveWheels(5, -5)
