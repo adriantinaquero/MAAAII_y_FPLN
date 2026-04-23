@@ -23,21 +23,10 @@ class LeerQR(Behavior):
         self.supress = False
         for behavior in self.supress_list:
              behavior.is_supressed = True
-
-        # self.robobo.sayText("LEYENDO")
         
         qr = self.ultimo_qr_visto
         
         self.robobo.sayText(qr.id)
-
-        # if qr.id == "peligro izquierda":
-        #     self.robobo.stopMotors()
-        #     self.robobo.sayText("CURVA PELIGROSA A LA IZQUIERDA")
-            
-        # elif qr.id == "autobus":
-        #     self.robobo.setLedColorTo(LED.All, Color.GREEN)
-        #     self.robobo.sayText("AUTOBUS")
-        #     self.robobo.moveWheelsByTime(30, 30, 2)
 
         for behavior in self.supress_list:
             behavior.is_supressed = False

@@ -9,7 +9,7 @@ class EvitarColisiones(Behavior):
 
     def take_control(self):
         if not self.supress:
-            if self.robobo.readIRSensor(IR.FrontC) > 30:       # si el sensor central delantero detecta algo muy cerca se activa este comportamiento 
+            if self.robobo.readIRSensor(IR.FrontC) > 30:      # el sensor central delantero detecta algo muy cerca
                 return True
             return False
 
@@ -18,7 +18,7 @@ class EvitarColisiones(Behavior):
         for behavior in self.supress_list:
              behavior.is_supressed = True
 
-        self.robobo.sayText("EVITANDO")
+        # el robobo retrocede, gira un poco y avanza, bordenado el obstáculo
         self.robobo.moveWheelsByTime(-10, -10, 2)
         self.robobo.moveWheelsByTime(15, -15, 1)
         self.robobo.moveWheelsByTime(10, 10, 4)
