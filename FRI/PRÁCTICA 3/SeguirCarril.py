@@ -1,4 +1,3 @@
-from robobosim.RoboboSim import RoboboSim   
 from robobopy.Robobo import Robobo          
 from Behavior import Behavior
 from robobopy.utils.IR import IR
@@ -20,7 +19,7 @@ class SeguirCarril(Behavior):
             self.prev_error = 0
             self.integral = 0
 
-    def take_control(self):     # en principio siempre está activo
+    def take_control(self):     # en principio siempre está activo, es el comportamiento más básico
         if not self.is_supressed:
             return True 
 
@@ -30,7 +29,6 @@ class SeguirCarril(Behavior):
                 behavior.is_supressed = True
 
             self.robobo.moveWheels(15, 15)
-            self.robobo.sayText("SIGUIENDO")
 
             ir_izq = self.robobo.readIRSensor(IR.FrontLL)
             ir_der = self.robobo.readIRSensor(IR.FrontRR)
@@ -60,7 +58,7 @@ class SeguirCarril(Behavior):
 
 
 
-
+# función para testear si funciona el comportamiento
 def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: float = 0.3, prev_error = 0, integral = 0):
     videoStream.connect()
     prev_err = 0 # Inicializamos las variables necesarias para el PID
@@ -119,12 +117,8 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
 
 if __name__=="__main__":
     IP = "172.20.10.14"
-
-    # sim = RoboboSim(IP) # conexión al simulador
-    # sim.connect()
-    
     videoStream = RoboboVideo("localhost")
-    robobo = Robobo(IP) # conexión al robobo
+    robobo = Robobo(IP)
     robobo.connect()
     robobo.startStream()
     robobo.moveTiltTo(105, 20)
