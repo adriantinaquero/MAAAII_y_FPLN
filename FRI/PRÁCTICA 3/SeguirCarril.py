@@ -68,7 +68,7 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
     try:
         while True:
             robobo.wait(0.4)
-            frame = videoStream.getImage()[340:640, :, :]
+            frame = videoStream.getImage()[440:640, :, :]
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             h, w = np.shape(gray)
 
@@ -84,7 +84,7 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
                     xs_der = xs[xs >= image_center]
                     if len(xs_der) > 0 and len(xs_izq) > 0:
                         center = (np.max(xs_izq) + np.min(xs_der)) // 2
-                        centers.append(center)
+                        centers.append(np.min(xs_der))
 
             lane_center = np.mean(centers)
 
@@ -96,17 +96,16 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-            error = int(lane_center - image_center)
-            print(error)
-            if error in range(-10, 10): # En caso de estar en el rango adecuado activamos el controlador proporcional
-                robobo.moveWheels(5, 5)
-            else: # En otro caso activamos el PID
-                xerror = error # Limitamos ligeramente el rango objetivo para evitar bloqueos irresolubles
-                der = xerror - prev_err
-                prev_err = xerror # Calculamos los valores necesarios para el PID
-                integral += xerror
-                xcorrection = round(kp * xerror + integral * ki + der * kd)
-                robobo.moveWheels(-xcorrection, xcorrection) # Aplicamos la correcion del PID {Si la corre
+            error = int(lane_center - 440)
+            print(error, lane_center)
+            # En otro caso activamos el PID
+            xerror = error # Limitamos ligeramente el rango objetivo para evitar bloqueos irresolubles
+            der = xerror - prev_err
+            prev_err = xerror # Calculamos los valores necesarios para el PID
+            integral += xerror
+            xcorrection = round(kp * xerror + integral * ki + der * kd)
+            robobo.moveWheels(velocidad - xcorrection, velocidad + xcorrection) # Aplicamos la correcion del PID {Si la corre
+
     finally:
         robobo.stopMotors()
         robobo.disconnect()
@@ -118,7 +117,7 @@ def seguir_carril(velocidad: int = 15, kp: float = 0.8, ki: float = 0.01, kd: fl
 
 
 if __name__=="__main__":
-    IP = "172.20.10.14"
+    IP = "localhost"
 
     # sim = RoboboSim(IP) # conexión al simulador
     # sim.connect()
@@ -128,4 +127,4 @@ if __name__=="__main__":
     robobo.connect()
     robobo.startStream()
     robobo.moveTiltTo(105, 20)
-    seguir_carril(velocidad=5, kp=0.2, ki=0.02, kd=0)
+    seguir_carril(velocidad=5, kp=0.05, ki=0, kd=0)
