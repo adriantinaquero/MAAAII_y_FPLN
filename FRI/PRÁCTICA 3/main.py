@@ -3,40 +3,51 @@ from SeguirCarril import SeguirCarril
 from LeerQR import LeerQR
 from RecargarBateria import RecargarBateria
 from EvitarColisiones import EvitarColisiones
+from robobopy_videostream.RoboboVideo import RoboboVideo 
 import time
 
 
-def main():
-    robobo = Robobo("localhost")
-    robobo.connect()
+def main(IP):
+    try:
+        robobo = Robobo(IP)
+        videoStream = RoboboVideo(IP)
 
-    # diccionario que se pasará a los comportamientos para que lo activen cuando se finalice la misión
-    params = {"stop": False}
 
-    # creamos de los comportamientos
-    seguir_carril_comportamiento = SeguirCarril(robobo, [], params)
-    leer_qr_comportamiento = LeerQR(robobo, [seguir_carril_comportamiento], params)
-    recargar_bateria_comportamiento = RecargarBateria(robobo, [seguir_carril_comportamiento, leer_qr_comportamiento], params)
-    evitar_colisiones_comportamiento = EvitarColisiones(robobo, [seguir_carril_comportamiento, leer_qr_comportamiento, recargar_bateria_comportamiento], params)
+        robobo.connect()
+        robobo.startStream()
+        videoStream.connect()
 
-    # lista con todos los comportamientos (de menor a mayor prioridad)
-    threads = [seguir_carril_comportamiento, leer_qr_comportamiento, recargar_bateria_comportamiento, evitar_colisiones_comportamiento]
+        # diccionario que se pasará a los comportamientos para que lo activen cuando se finalice la misión
+        params = {"stop": False}
 
-    # iniciamos todos los comportamientos
-    seguir_carril_comportamiento.start()
-    leer_qr_comportamiento.start()
-    recargar_bateria_comportamiento.start()
-    evitar_colisiones_comportamiento.start()
+        # creamos de los comportamientos
+        seguir_carril_comportamiento = SeguirCarril(robobo, [], params, videoStream)
+        leer_qr_comportamiento = LeerQR(robobo, [seguir_carril_comportamiento], params)
+        recargar_bateria_comportamiento = RecargarBateria(robobo, [seguir_carril_comportamiento, leer_qr_comportamiento], params)
+        evitar_colisiones_comportamiento = EvitarColisiones(robobo, [seguir_carril_comportamiento, leer_qr_comportamiento, recargar_bateria_comportamiento], params)
 
-    # el hilo princimal se mantiene en espera hasta que algún comportamiento marca el objetivo como terminado
-    while not params["stop"]:
-        time.sleep(0.1)
+        # lista con todos los comportamientos (de menor a mayor prioridad)
+        threads = [seguir_carril_comportamiento, leer_qr_comportamiento, recargar_bateria_comportamiento, evitar_colisiones_comportamiento]
 
-    # espera a que terminen todos los hilos
-    for thread in threads:
-        thread.join()
+        # iniciamos todos los comportamientos
+        seguir_carril_comportamiento.start()
+        leer_qr_comportamiento.start()
+        recargar_bateria_comportamiento.start()
+        evitar_colisiones_comportamiento.start()
 
-    robobo.disconnect()
+        # el hilo princimal se mantiene en espera hasta que algún comportamiento marca el objetivo como terminado
+        while not params["stop"]:
+            time.sleep(0.1)
+            # espera a que terminen todos los hilos
+        for thread in threads:
+            thread.join(timeout=1)
+    finally:
+        videoStream.disconnect()
+        robobo.stopMotors()
+        robobo.disconnect()
+
 
 if __name__ == "__main__":
-    main()
+    main("172.20.10.2")
+    # main("localhost")
+

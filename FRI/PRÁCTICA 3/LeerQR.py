@@ -11,19 +11,19 @@ class LeerQR(Behavior):
     def take_control(self):
         if not self.supress:
             qr = self.robobo.readQR()
-
-            if qr and qr.distance > 25:
+            id = qr.id if qr.id != None else "NONE"
+            last_id = self.ultimo_qr_visto.id if self.ultimo_qr_visto != None else "NONE"
+            if qr and qr.distance > 25 and last_id != id:
                 self.ultimo_qr_visto = qr
                 return True
             
-            self.ultimo_qr_visto = None
             return False
 
     def action(self):
         self.supress = False
         for behavior in self.supress_list:
-             behavior.is_supressed = True
-        
+            behavior.is_supressed = True
+        self.robobo.stopMotors()
         qr = self.ultimo_qr_visto
         
         self.robobo.sayText(qr.id)
