@@ -41,19 +41,3 @@ class Behavior(Thread):
 
     def stopped(self):
         return self.params["stop"]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

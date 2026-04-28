@@ -10,14 +10,17 @@ import neat
 import pygame
 
 # Constants
-WIDTH = 1600
-HEIGHT = 880
+# WIDTH = 1600
+# HEIGHT = 880
 
 WIDTH = 1920
 HEIGHT = 1080
 
-CAR_SIZE_X = 30    
-CAR_SIZE_Y = 30
+WIDTH = 449
+HEIGHT = 503
+
+CAR_SIZE_X = 21    
+CAR_SIZE_Y = 28
 
 BORDER_COLOR = (255, 255, 255, 255) # Color To Crash on Hit
 
@@ -28,12 +31,13 @@ class Car:
     def __init__(self):
         # Load Car Sprite and Rotate
         self.sprite = pygame.image.load("FRI/PRÁCTICA 3/robobo.png").convert() # Convert Speeds Up A Lot
-        self.sprite = pygame.transform.rotate(self.sprite, -90)
+        self.sprite = pygame.transform.rotate(self.sprite, 0)
         self.sprite = pygame.transform.scale(self.sprite, (CAR_SIZE_X, CAR_SIZE_Y))
         self.rotated_sprite = self.sprite 
 
         # self.position = [690, 740] # Starting Position
         self.position = [1340, 520] # Starting Position
+        self.position = [406, 400]
         self.angle = 0
         self.speed = 0
 
@@ -66,7 +70,7 @@ class Car:
             # If Any Corner Touches Border Color -> Crash
             # Assumes Rectangle
             if game_map.get_at((int(point[0]), int(point[1]))) == BORDER_COLOR:
-                self.alive = False
+                # self.alive = False
                 break
 
     def check_radar(self, degree, game_map):
@@ -95,8 +99,8 @@ class Car:
         # Don't Let The Car Go Closer Than 20px To The Edge
         self.rotated_sprite = self.rotate_center(self.sprite, self.angle)
         self.position[0] += math.cos(math.radians(360 - self.angle)) * self.speed
-        self.position[0] = max(self.position[0], 20)
-        self.position[0] = min(self.position[0], WIDTH - 120)
+        self.position[0] = max(self.position[0], 5)
+        self.position[0] = min(self.position[0], WIDTH - 40)
 
         # Increase Distance and Time
         self.distance += self.speed
@@ -104,8 +108,8 @@ class Car:
         
         # Same For Y-Position
         self.position[1] += math.sin(math.radians(360 - self.angle)) * self.speed
-        self.position[1] = max(self.position[1], 20)
-        self.position[1] = min(self.position[1], WIDTH - 120)
+        self.position[1] = max(self.position[1], 5)
+        self.position[1] = min(self.position[1], WIDTH - 5)
 
         # Calculate New Center
         self.center = [int(self.position[0]) + CAR_SIZE_X / 2, int(self.position[1]) + CAR_SIZE_Y / 2]
@@ -177,7 +181,7 @@ def run_simulation(genomes, config):
     clock = pygame.time.Clock()
     generation_font = pygame.font.SysFont("Arial", 30)
     alive_font = pygame.font.SysFont("Arial", 20)
-    game_map = pygame.image.load('FRI/PRÁCTICA 3/mapa.png').convert() # Convert Speeds Up A Lot
+    game_map = pygame.image.load('FRI/PRÁCTICA 3/roadonly.png').convert() # Convert Speeds Up A Lot
     game_map = pygame.transform.scale(game_map, (WIDTH, HEIGHT))
 
     global current_generation
@@ -238,7 +242,7 @@ def run_simulation(genomes, config):
         text_rect = text.get_rect()
         text_rect.center = (900, 490)
         screen.blit(text, text_rect)
-
+        # pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(405, 400, 18, 24)) 
         pygame.display.update()
         clock.tick(60) # 60 FPS
 

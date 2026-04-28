@@ -48,6 +48,6 @@ def main(IP):
 
 
 if __name__ == "__main__":
-    main("172.20.10.2")
-    # main("localhost")
+    # main("172.20.10.2")
+    main("localhost")
 

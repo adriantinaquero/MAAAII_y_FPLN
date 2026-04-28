@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 
 class SeguirCarril(Behavior):
-    def __init__(self, robobo, supress_list, params, videoStream, velocidad=30, kp=0.1, ki=0, kd=0):
+    def __init__(self, robobo, supress_list, params, videoStream, velocidad=30, kp=0.075, ki=0, kd=0):
             super().__init__(robobo, supress_list, params)
             self.velocidad = velocidad
             self.kp = kp
@@ -63,7 +63,7 @@ class SeguirCarril(Behavior):
                 break
 
             # (gray > 240).astype(np.uint8) * 255
-            error = int(lane_center - 410)
+            error = int(lane_center - 400)
             xerror = error
             der = xerror - self.prev_error
             self.prev_error = xerror 
