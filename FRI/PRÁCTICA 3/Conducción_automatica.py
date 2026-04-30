@@ -19,10 +19,11 @@ HEIGHT = 1080
 WIDTH = 449
 HEIGHT = 503
 
-CAR_SIZE_X = 21    
-CAR_SIZE_Y = 28
+CAR_SIZE_X = 20    
+CAR_SIZE_Y = 20
 
 BORDER_COLOR = (255, 255, 255, 255) # Color To Crash on Hit
+NO_VISON_COLOR = (0, 255, 255, 255)
 
 current_generation = 0 # Generation counter
 
@@ -31,13 +32,15 @@ class Car:
     def __init__(self):
         # Load Car Sprite and Rotate
         self.sprite = pygame.image.load("FRI/PRÁCTICA 3/robobo.png").convert() # Convert Speeds Up A Lot
-        self.sprite = pygame.transform.rotate(self.sprite, 0)
+        self.sprite = pygame.transform.rotate(self.sprite, 90)
         self.sprite = pygame.transform.scale(self.sprite, (CAR_SIZE_X, CAR_SIZE_Y))
         self.rotated_sprite = self.sprite 
 
         # self.position = [690, 740] # Starting Position
         self.position = [1340, 520] # Starting Position
-        self.position = [406, 400]
+        self.position = [405, 400]
+        self.position = [230, 468]
+
         self.angle = 0
         self.speed = 0
 
@@ -61,8 +64,8 @@ class Car:
         # Optionally Draw All Sensors / Radars
         for radar in self.radars:
             position = radar[0]
-            pygame.draw.line(screen, (0, 0, 255), self.center, position, 1)
-            pygame.draw.circle(screen, (0, 0, 255), position, 5)
+            pygame.draw.line(screen, (100, 50, 255), self.center, position, 1)
+            pygame.draw.circle(screen, (100, 50, 255), position, 5)
 
     def check_collision(self, game_map):
         self.alive = True
@@ -70,8 +73,12 @@ class Car:
             # If Any Corner Touches Border Color -> Crash
             # Assumes Rectangle
             if game_map.get_at((int(point[0]), int(point[1]))) == BORDER_COLOR:
-                # self.alive = False
+                self.alive = False
                 break
+    
+    def conditions(self, x, y, length, game_map):
+        map_color = game_map.get_at((x, y))
+        return not (map_color == BORDER_COLOR or map_color == NO_VISON_COLOR) and length < 100
 
     def check_radar(self, degree, game_map):
         length = 0
@@ -79,7 +86,7 @@ class Car:
         y = int(self.center[1] + math.sin(math.radians(360 - (self.angle + degree))) * length)
 
         # While We Don't Hit BORDER_COLOR AND length < 300 (just a max) -> go further and further
-        while not game_map.get_at((x, y)) == BORDER_COLOR and length < 300:
+        while self.conditions(x, y, length, game_map):
             length = length + 1
             x = int(self.center[0] + math.cos(math.radians(360 - (self.angle + degree))) * length)
             y = int(self.center[1] + math.sin(math.radians(360 - (self.angle + degree))) * length)
@@ -92,7 +99,7 @@ class Car:
         # Set The Speed To 20 For The First Time
         # Only When Having 4 Output Nodes With Speed Up and Down
         if not self.speed_set:
-            self.speed = 5
+            self.speed = 4
             self.speed_set = True
 
         # Get Rotated Sprite And Move Into The Right X-Direction
@@ -100,7 +107,7 @@ class Car:
         self.rotated_sprite = self.rotate_center(self.sprite, self.angle)
         self.position[0] += math.cos(math.radians(360 - self.angle)) * self.speed
         self.position[0] = max(self.position[0], 5)
-        self.position[0] = min(self.position[0], WIDTH - 40)
+        self.position[0] = min(self.position[0], WIDTH - 5)
 
         # Increase Distance and Time
         self.distance += self.speed
@@ -109,7 +116,7 @@ class Car:
         # Same For Y-Position
         self.position[1] += math.sin(math.radians(360 - self.angle)) * self.speed
         self.position[1] = max(self.position[1], 5)
-        self.position[1] = min(self.position[1], WIDTH - 5)
+        self.position[1] = min(self.position[1], HEIGHT - 5)
 
         # Calculate New Center
         self.center = [int(self.position[0]) + CAR_SIZE_X / 2, int(self.position[1]) + CAR_SIZE_Y / 2]
@@ -128,8 +135,8 @@ class Car:
         self.radars.clear()
 
         # From -90 To 120 With Step-Size 45 Check Radar
-        for d in range(-90, 120, 45):
-            self.check_radar(0, game_map)
+        for d in range(-45, 90, 45):
+            self.check_radar(d, game_map)
 
     def get_data(self):
         # Get Distances To Border
@@ -185,7 +192,7 @@ def run_simulation(genomes, config):
     game_map = pygame.transform.scale(game_map, (WIDTH, HEIGHT))
 
     global current_generation
-    current_generation += 1
+    current_generation += 1                                                                                                                          
 
     # Simple Counter To Roughly Limit Time (Not Good Practice)
     counter = 0
@@ -206,9 +213,9 @@ def run_simulation(genomes, config):
                 car.angle -= 10 # Right
             elif choice == 2:
                 if(car.speed - 2 >= 12):
-                    car.speed -= 2 # Slow Down
+                    car.speed -= 0.2 # Slow Down
             else:
-                car.speed += 2 # Speed Up
+                car.speed += 0.2 # Speed Up
         
         # Check If Car Is Still Alive
         # Increase Fitness If Yes And Break Loop If Not
@@ -235,14 +242,14 @@ def run_simulation(genomes, config):
         # Display Info
         text = generation_font.render("Generation: " + str(current_generation), True, (0,0,0))
         text_rect = text.get_rect()
-        text_rect.center = (900, 450)
+        text_rect.center = (224, 200)
         screen.blit(text, text_rect)
 
         text = alive_font.render("Still Alive: " + str(still_alive), True, (0, 0, 0))
         text_rect = text.get_rect()
-        text_rect.center = (900, 490)
+        text_rect.center = (224, 240)
         screen.blit(text, text_rect)
-        # pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(405, 400, 18, 24)) 
+        # pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(230, 468, 20, 20)) 
         pygame.display.update()
         clock.tick(60) # 60 FPS
 

@@ -74,7 +74,7 @@ if __name__ == "__main__":
     route = "VCA/PRÁCTICA 2"
     simple_dataset = OCTDataset(f"{route}/dataset/images", f"{route}/dataset/masks")
     print("Dataset len:", len(simple_dataset))
-    nsamples = 1
+    nsamples = 10
     for _ in range(nsamples):
         idx = np.random.randint(0, len(simple_dataset))
         im, mask = simple_dataset[idx]
