@@ -1,14 +1,10 @@
 from robobopy.Robobo import Robobo          
 from Behavior import Behavior
-from robobopy.utils.IR import IR
 from robobopy_videostream.RoboboVideo import RoboboVideo 
 from robobopy.Robobo import Robobo 
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-import pickle
-import neat
-import math
+
 
 
 class SeguirCarril(Behavior):
