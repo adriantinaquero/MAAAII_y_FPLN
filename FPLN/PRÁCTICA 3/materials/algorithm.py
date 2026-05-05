@@ -198,11 +198,17 @@ class ArcEager():
         Returns:
             bool: True if a LEFT-ARC transition is valid in the current state, False otherwise.
         """
-        arcs = state.A
+
+        buffer = state.B
         stack = state.S
+        arcs = state.A
+
+        if (len(stack) == 0) or (len(buffer) == 0):
+            return False
+        
         last_in = stack[-1].id
         for arc in arcs:
-            if arc[2] == last_in or last_in == "ROOT": return False
+            if arc[2] == last_in or last_in == 0: return False      # 0 es el id de "ROOT"
         return True
 
 
@@ -220,10 +226,15 @@ class ArcEager():
         Returns:
             bool: True if a LEFT-ARC transition is the correct action in the current state, False otherwise.
         """
+
         buffer = state.B
-        stack = state.A
+        stack = state.S
+
+        if (len(stack) == 0) or (len(buffer) == 0):
+            return False
+
         for arc in self.gold_arcs(buffer):
-            if arc[0] == buffer[0] and arc[2] == stack[-1]:
+            if (arc[0] == buffer[0].id) and (arc[2] == stack[-1].id):
                 return True
         return False
     
@@ -240,12 +251,15 @@ class ArcEager():
         Returns:
             bool: True if a RIGHT-ARC transition is the correct action in the current state, False otherwise.
         """
-        # si el buffer está vacío, no se puede realizar un RA
-        if len(state.B) == 0:
+
+        buffer = state.B
+        stack = state.S
+
+        if (len(stack) == 0) or (len(buffer) == 0):
             return False
 
         for arc in self.gold_arcs(state.B):
-            if (arc[0] ==state.S[-1]) and (arc[2]==state.B[0]):
+            if (arc[0] ==stack[-1].id) and (arc[2]==buffer[0].id):
                 return True
             
         return False
@@ -264,8 +278,16 @@ class ArcEager():
         Returns:
             bool: True if a RIGHT-ARC transition can be validly applied in the current state, False otherwise.
         """
-        for arc in state.A:
-            if arc[2] == state.B[0]:
+
+        buffer = state.B
+        stack = state.S
+        arcs = state.A
+
+        if (len(stack) == 0) or (len(buffer) == 0):
+            return False
+        
+        for arc in arcs:
+            if arc[2] == buffer[0].id:
                 return False
         
         return True
@@ -289,8 +311,13 @@ class ArcEager():
         """
         #It is correct to do if there is no word in the state buffer (state.B) which head is 
         #the word on the top of the stack (state.S[-1])
-        for arc in state.A:
-            if (arc[0] == state.S[-1]) and (arc[2] in state.B):
+
+        buffer = state.B
+        stack = state.S
+        arcs = state.A
+
+        for arc in arcs:
+            if (arc[0] == stack[-1].id) and any(token.id == arc[2] for token in buffer):
                 return False
         return True
 
@@ -308,8 +335,12 @@ class ArcEager():
         Returns:
             bool: True if a REDUCE transition is valid in the current state, False otherwise.
         """
-        for arc in state.A:
-            if arc[2] == state.S[-1]:
+        
+        stack = state.S
+        arcs = state.A
+
+        for arc in arcs:
+            if arc[2] == stack[-1].id:
                 return True
         
         return False
@@ -391,17 +422,21 @@ class ArcEager():
         t = transition.action
         dep = transition.dependency
 
+        buffer = state.B
+        stack = state.S
+        arcs = state.A
+
         # The top item on the stack and the first item in the buffer
-        s = state.S[-1] if state.S else None  # Top of the stack
-        b = state.B[0] if state.B else None   # First in the buffer
+        s = stack[-1] if state.S else None  # Top of the stack
+        b = buffer[0] if state.B else None   # First in the buffer
 
         if t == self.LA and self.LA_is_valid(state):
             # LEFT-ARC transition logic: to be implemented
             # Add an arc to the state from the top of the buffer to the top of the stack
             # Remove from the state the top word from the stack
-            new_arc = (b, dep, s)
-            state.A.add(new_arc)
-            del(state.S[-1])
+            new_arc = (b.id, dep, s.id)
+            arcs.add(new_arc)
+            del(stack[-1])
 
 
         elif t == self.RA and self.RA_is_valid(state): 
@@ -409,20 +444,21 @@ class ArcEager():
             # Add an arc to the state from the stack top to the buffer head with the specified dependency
             # Move from the state the buffer head to the stack
             # Remove from the state the first item from the buffer
-            new_arc = (s, dep, b)
-            state.A.add(new_arc)
-            del(state.B[0])
+            new_arc = (s.id, dep, b.id)
+            arcs.add(new_arc)
+            stack.append(buffer[0])
+            del(buffer[0])
 
         elif t == self.REDUCE and self.REDUCE_is_valid(state): 
             # REDUCE transition logic: to be implemented
             # Remove from state the word from the top of the stack
-            del(state.S[s])
+            del(stack[s])
 
         else:
             # SHIFT transition logic: Already implemented! Use it as a basis to implement the others
             #This involves moving the top of the buffer to the stack
-            state.S.append(b) 
-            del state.B[:1]
+            stack.append(b) 
+            del buffer[:1]
     
 
 
