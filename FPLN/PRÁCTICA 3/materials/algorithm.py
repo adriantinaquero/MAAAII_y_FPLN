@@ -198,7 +198,14 @@ class ArcEager():
         Returns:
             bool: True if a LEFT-ARC transition is valid in the current state, False otherwise.
         """
-        raise NotImplementedError
+        arcs = state.A
+        stack = state.S
+        last_in = stack[-1].id
+        for arc in arcs:
+            if arc[2] == last_in or last_in == "ROOT": return False
+        return True
+
+
 
     def LA_is_correct(self, state: State) -> bool:
         """
@@ -213,7 +220,12 @@ class ArcEager():
         Returns:
             bool: True if a LEFT-ARC transition is the correct action in the current state, False otherwise.
         """
-        raise NotImplementedError
+        buffer = state.B
+        stack = state.A
+        for arc in self.gold_arcs(buffer):
+            if arc[0] == buffer[0] and arc[2] == stack[-1]:
+                return True
+        return False
     
     def RA_is_correct(self, state: State) -> bool:
         """
