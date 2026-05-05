@@ -1,4 +1,4 @@
-from materials.token import Token 
+from token import Token 
 import sys
 
 class ConlluReader():

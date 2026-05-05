@@ -18,9 +18,9 @@ Read and convert CoNLLU files into tree structures
 """
 # Initialize the ConlluReader
 reader = ConlluReader()
-train_trees = read_file(reader,path="en_partut-ud-train_clean.conllu")
-dev_trees = read_file(reader,path="en_partut-ud-dev_clean.conllu")
-test_trees = read_file(reader,path="en_partut-ud-test_clean.conllu")
+train_trees = read_file(reader,path="FPLN/PRÁCTICA 3/materials/en_partut-ud-train_clean.conllu")
+dev_trees = read_file(reader,path="FPLN/PRÁCTICA 3/materials/en_partut-ud-dev_clean.conllu")
+test_trees = read_file(reader,path="FPLN/PRÁCTICA 3/materials/en_partut-ud-test_clean.conllu")
 
 """
 We remove the non-projective sentences from the training and development set,
