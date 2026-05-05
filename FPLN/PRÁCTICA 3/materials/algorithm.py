@@ -240,7 +240,15 @@ class ArcEager():
         Returns:
             bool: True if a RIGHT-ARC transition is the correct action in the current state, False otherwise.
         """
-        raise NotImplementedError
+        # si el buffer está vacío, no se puede realizar un RA
+        if len(state.B) == 0:
+            return False
+
+        for arc in self.gold_arcs(state.B):
+            if (arc[0] ==state.S[-1]) and (arc[2]==state.B[0]):
+                return True
+            
+        return False
 
     def RA_is_valid(self, state: State) -> bool:
         """
@@ -256,7 +264,11 @@ class ArcEager():
         Returns:
             bool: True if a RIGHT-ARC transition can be validly applied in the current state, False otherwise.
         """
-        raise NotImplementedError
+        for arc in state.A:
+            if arc[2] == state.B[0]:
+                return False
+        
+        return True
 
     def REDUCE_is_correct(self, state: State) -> bool:
         """
@@ -275,9 +287,12 @@ class ArcEager():
         Returns:
             bool: True if a REDUCE transition is the correct action in the current state, False otherwise.
         """
-        #It is correct to do if there is no word in the state buffer  (state.B) which head is 
+        #It is correct to do if there is no word in the state buffer (state.B) which head is 
         #the word on the top of the stack (state.S[-1])
-        raise NotImplementedError
+        for arc in state.A:
+            if (arc[0] == state.S[-1]) and (arc[2] in state.B):
+                return False
+        return True
 
     def REDUCE_is_valid(self, state: State) -> bool:
         """
@@ -293,7 +308,11 @@ class ArcEager():
         Returns:
             bool: True if a REDUCE transition is valid in the current state, False otherwise.
         """
-        raise NotImplementedError
+        for arc in state.A:
+            if arc[2] == state.S[-1]:
+                return True
+        
+        return False
 
     def oracle(self, sent: list['Token']) -> list['Sample']:
         """
@@ -380,19 +399,21 @@ class ArcEager():
             # LEFT-ARC transition logic: to be implemented
             # Add an arc to the state from the top of the buffer to the top of the stack
             # Remove from the state the top word from the stack
-            raise NotImplementedError
+            new_arc = (b, dep, s)
+            state.A.add(new_arc)
 
         elif t == self.RA and self.RA_is_valid(state): 
             # RIGHT-ARC transition
             # Add an arc to the state from the stack top to the buffer head with the specified dependency
             # Move from the state the buffer head to the stack
             # Remove from the state the first item from the buffer
-            raise NotImplementedError
+            new_arc = (s, dep, b)
+            state.A.add(new_arc)
 
         elif t == self.REDUCE and self.REDUCE_is_valid(state): 
             # REDUCE transition logic: to be implemented
             # Remove from state the word from the top of the stack
-            raise NotImplementedError
+            del(state.S[s])
 
         else:
             # SHIFT transition logic: Already implemented! Use it as a basis to implement the others
