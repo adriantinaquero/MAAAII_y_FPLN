@@ -401,6 +401,8 @@ class ArcEager():
             # Remove from the state the top word from the stack
             new_arc = (b, dep, s)
             state.A.add(new_arc)
+            del(state.S[-1])
+
 
         elif t == self.RA and self.RA_is_valid(state): 
             # RIGHT-ARC transition
@@ -409,6 +411,7 @@ class ArcEager():
             # Remove from the state the first item from the buffer
             new_arc = (s, dep, b)
             state.A.add(new_arc)
+            del(state.B[0])
 
         elif t == self.REDUCE and self.REDUCE_is_valid(state): 
             # REDUCE transition logic: to be implemented
