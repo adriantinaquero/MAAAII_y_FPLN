@@ -115,8 +115,43 @@ class Sample(object):
 
                 Output: ['ROOT', 'Distribution', 'license', 'does', 'ROOT_UPOS', 'NOUN', 'NOUN', 'AUX']
         """
-        raise NotImplementedError
-    
+        feats = []
+
+        # stack
+        stack = self._state.S
+        for i in range(nstack_feats):
+            if len(stack) > i:
+                token = stack[-(i+1)]
+                feats.append(token.form)
+            else:
+                feats.append("<PAD>")
+
+        # buffer
+        buffer = self._state.B
+        for i in range(nbuffer_feats):
+            if len(buffer) > i:
+                token = buffer[i]
+                feats.append(token.form)
+            else:
+                feats.append("<PAD>")
+
+        # UPOS stack
+        for i in range(nstack_feats):
+            if len(stack) > i:
+                token = stack[-(i+1)]
+                feats.append(token.upos)
+            else:
+                feats.append("<PAD>")
+
+        # UPOS buffer
+        for i in range(nbuffer_feats):
+            if len(buffer) > i:
+                token = buffer[i]
+                feats.append(token.upos)
+            else:
+                feats.append("<PAD>")
+
+        return feats        
 
     def __str__(self):
         """
