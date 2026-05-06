@@ -42,8 +42,13 @@ class ParserMLP:
             epochs (int): The number of epochs for training the model.
             batch_size (int): The batch size used during model training.
         """
-        raise NotImplementedError
-    
+
+        self.word_emb_dim = word_emb_dim
+        self.hidden_dim = hidden_dim
+        self.epochs = epochs
+        self.batch_size = batch_size
+
+
     def train(self, training_samples: list['Sample'], dev_samples: list['Sample']):
         """
         Trains the MLP model using the provided training and development samples.
