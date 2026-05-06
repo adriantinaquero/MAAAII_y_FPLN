@@ -405,21 +405,51 @@ class ArcEager():
 
         #Applies the transition system until a final configuration state is reached
         while not self.final_state(state):
+
+            stack = state.S
+            buffer = state.B
             
             if self.LA_is_valid(state) and self.LA_is_correct(state):
                 #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
                 #Update the state by applying the LA transition using the function apply_transition
-                raise NotImplementedError
+                for arc in self.gold_arcs:
+                    if arc[0] == buffer[-1].id and arc[2] == stack[-1].id:
+                        transition = Transition(self.LA, arc[1])
+                        samples.append(Sample(state, transition))
+                        self.apply_transition(state, transition)
+                        break
+
+                if (len(samples) > 0) and (samples[-1].transition.action == self.LA):
+                    continue
 
             if self.RA_is_valid(state) and self.RA_is_correct(state):
                 #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
                 #Update the state by applying the RA transition using the function apply_transition
-                raise NotImplementedError
+                for arc in self.gold_arcs:
+                    if arc[0] == stack[-1].id and arc[2] == buffer[-1].id:
+                        transition = Transition(self.RA, arc[1])
+                        samples.append(Sample(state, transition))
+                        self.apply_transition(state, transition)
+                        break
+
+                if (len(samples) > 0) and (samples[-1].transition.action == self.RA):
+                    continue
 
             elif self.REDUCE_is_valid(state) and self.REDUCE_is_correct(state):
                 #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
                 #Update the state by applying the REDUCE transition using the function apply_transition
-                raise NotImplementedError
+                reduce = True
+                for arc in self.gold_arcs:
+                    if arc[0] == stack[-1].id and any(token.id == arc[2] for token in buffer):
+                        reduce = False
+                        break
+
+                if reduce == True:
+                    transition = Transition(self.REDUCE)
+                    samples.append(Sample(state, transition))
+                    self.apply_transition(state, transition)
+                    continue
+
             else:
                 #If no other transiton can be applied, it's a SHIFT transition
                 transition = Transition(self.SHIFT)
