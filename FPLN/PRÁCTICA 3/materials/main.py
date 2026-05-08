@@ -60,3 +60,29 @@ print ("\n ------ TODO: Implement the rest of the assignment ------")
 # 2. Specify the file path: path = "<YOUR_PATH_TO_OUTPUT_FILE>"
 # 3. Process the file: trees = postprocessor.postprocess(path)
 # 4. Save the processed trees to a new output file.
+
+
+from model import ParserMLP
+
+train_samples = []
+for tree in train_trees:
+    samples = arc_eager.oracle(tree)
+    train_samples.extend(samples)
+
+test_samples = []
+for tree in dev_trees:
+    samples = arc_eager.oracle(tree)
+    test_samples.extend(samples)
+
+print(len(train_samples))  # más o menos 200000 samples
+
+model = ParserMLP(
+    word_emb_dim=100,
+    hidden_dim=64,
+    epochs=5,
+    batch_size=64
+)
+
+model.train(train_samples, test_samples)
+
+model.evaluate(test_samples)
