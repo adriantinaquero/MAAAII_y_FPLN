@@ -1,4 +1,4 @@
-from token import Token 
+from my_token import Token 
 
 class State(object):
     """

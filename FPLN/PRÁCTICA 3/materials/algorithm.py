@@ -1,5 +1,5 @@
 from state import State
-from token import Token
+from my_token import Token
 
 
 class Transition(object):

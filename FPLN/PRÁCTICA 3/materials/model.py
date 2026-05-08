@@ -1,6 +1,6 @@
-from token import Token
+from my_token import Token
 import numpy as np
-import keras
+import tensorflow as tf
 from algorithm import Sample, ArcEager, Transition
 
 
@@ -160,23 +160,23 @@ class ParserMLP:
             n_word_feats = X_words.shape[1]       # miramos el número de features por palabra para meterlo como tamaño del input del modelo
             n_pos_feats = X_pos.shape[1]
 
-            word_input = keras.layers.Input(shape=(n_word_feats,))
-            pos_input = keras.layers.Input(shape=(n_pos_feats,))
+            word_input = tf.keras.layers.Input(shape=(n_word_feats,))
+            pos_input = tf.keras.layers.Input(shape=(n_pos_feats,))
 
-            word_emb = keras.layers.Embedding(input_dim=len(self.word_to_id), output_dim=self.word_emb_dim)(word_input)
-            pos_emb = keras.layers.Embedding(input_dim=len(self.pos_to_id), output_dim=32)(pos_input)        # pusimos 32 como pos_embedding_size
+            word_emb = tf.keras.layers.Embedding(input_dim=len(self.word_to_id), output_dim=self.word_emb_dim)(word_input)
+            pos_emb = tf.keras.layers.Embedding(input_dim=len(self.pos_to_id), output_dim=32)(pos_input)        # pusimos 32 como pos_embedding_size
 
-            word_flat = keras.layers.Flatten()(word_emb)
-            pos_flat = keras.layers.Flatten()(pos_emb)
+            word_flat = tf.keras.layers.Flatten()(word_emb)
+            pos_flat = tf.keras.layers.Flatten()(pos_emb)
 
-            concatenation = keras.layers.Concatenate()([word_flat, pos_flat])
+            concatenation = tf.keras.layers.Concatenate()([word_flat, pos_flat])
 
-            hidden = keras.layers.Dense(self.hidden_dim, activation="relu")(concatenation)
+            hidden = tf.keras.layers.Dense(self.hidden_dim, activation="relu")(concatenation)
 
-            action_output = keras.layers.Dense(len(self.action_to_id), activation="softmax", name="action_output")(hidden)
-            dependency_output = keras.layers.Dense(len(self.dependency_to_id), activation="softmax", name="dependency_output")(hidden)
+            action_output = tf.keras.layers.Dense(len(self.action_to_id), activation="softmax", name="action_output")(hidden)
+            dependency_output = tf.keras.layers.Dense(len(self.dependency_to_id), activation="softmax", name="dependency_output")(hidden)
 
-            self.model = keras.Model(inputs=[word_input, pos_input], outputs=[action_output, dependency_output])
+            self.model = tf.keras.Model(inputs=[word_input, pos_input], outputs=[action_output, dependency_output])
 
             # compilamos y entrenamos el modelo
             self.model.compile(
@@ -289,7 +289,111 @@ class ParserMLP:
         # 7. Final State Check: Remove sentences that have reached a final state.
         # 8. Iterative Process: Repeat steps 2 to 7 until all sentences have reached their final state.
         
-        return NotImplementedError
+        arc_eager = ArcEager()
+
+        # cada elemento de la lista es el estado actual de cada oración, es decir [sent1_state, sent2_state, sent3_state...]
+        states = []
+
+        for sent in sents:
+            state = arc_eager.create_initial_state(sent)
+            states.append(state)
+
+        while len(states) > 0:
+            X_words = []
+            X_pos = []
+            states_to_predict = []    # estados que vamos a predecir (1 por oración)
+
+            # extraemos features
+            for state in states:
+                if arc_eager.final_state(state) == True:      # ignoramos oraciones cuyo estado ya sea final
+                    continue
+
+                feats = Sample(state, None).state_to_feats()
+                n = len(feats) // 2
+                feat_words = feats[:n]
+                feat_pos = feats[n:]
+
+                word_ids = []
+                for w in feat_words:
+                    if w in self.word_to_id:
+                        word_ids.append(self.word_to_id[w])
+                    else:
+                        word_ids.append(self.word_to_id["<UNK>"])
+
+                pos_ids = []
+                for p in feat_pos:
+                    if p in self.pos_to_id:
+                        pos_ids.append(self.pos_to_id[p])
+                    else:
+                        pos_ids.append(self.pos_to_id["<UNK>"])
+
+                X_words.append(word_ids)
+                X_pos.append(pos_ids)
+                states_to_predict.append(state)
+
+            # si no quedan estados que predecir, paramos
+            if len(states_to_predict) == 0:
+                break
+
+            X_words = np.array(X_words)
+            X_pos = np.array(X_pos)
+
+            predicted_actions, predicted_dependencies = self.model.predict([X_words, X_pos], verbose=0)
+
+            # nuevos estados
+            new_states = []
+
+            # procesamos predicciones
+            for i in range(len(states_to_predict)):
+                state = states_to_predict[i]
+                # ordenamos las acciones por probabilidad
+                sorted_actions = np.argsort(predicted_actions[i])[::-1]    # [::-1]  invierte el array para ordenar de mayor a menor
+                # mejor dependency
+                dependency_id = np.argmax(predicted_dependencies[i])
+                dependency = self.id_to_dependency[dependency_id]
+
+                selected_transition = None
+
+                # buscamos primera transición válida
+                for action_id in sorted_actions:
+                    action = self.id_to_action[action_id]
+                    valid = False
+
+                    if action == ArcEager.SHIFT:
+                        if len(state.B) > 0:
+                            valid = True
+
+                    elif action == ArcEager.LA:
+                        if arc_eager.LA_is_valid(state) == True:
+                            valid = True
+
+                    elif action == ArcEager.RA:
+                        if arc_eager.RA_is_valid(state) == True:
+                            valid = True
+
+                    elif action == ArcEager.REDUCE:
+                        if arc_eager.REDUCE_is_valid(state) == True:
+                            valid = True
+
+                    if valid == True:
+                        # SHIFT y REDUCE no tienen dependency
+                        if action == ArcEager.SHIFT or action == ArcEager.REDUCE:
+                            selected_transition = Transition(action)
+
+                        else:
+                            if dependency == "<NONE>":       # Si el modelo no sabe qué dependencia es, ponemos "dep" genérica 
+                                dependency = "dep"
+
+                            selected_transition = Transition(action, dependency)
+
+                        break
+
+                # aplicamos transición
+                arc_eager.apply_transition(state, selected_transition)
+
+            states = new_states
+
+        return
 
 
 if __name__ == "__main__":
