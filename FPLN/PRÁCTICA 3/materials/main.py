@@ -69,12 +69,10 @@ for tree in train_trees:
     samples = arc_eager.oracle(tree)
     train_samples.extend(samples)
 
-test_samples = []
+dev_samples = []
 for tree in dev_trees:
     samples = arc_eager.oracle(tree)
-    test_samples.extend(samples)
-
-print(len(train_samples))  # más o menos 200000 samples
+    dev_samples.extend(samples)
 
 model = ParserMLP(
     word_emb_dim=100,
@@ -83,6 +81,6 @@ model = ParserMLP(
     batch_size=64
 )
 
-model.train(train_samples, test_samples)
+model.train(train_samples, dev_samples)
 
-model.evaluate(test_samples)
+model.evaluate(dev_samples)
