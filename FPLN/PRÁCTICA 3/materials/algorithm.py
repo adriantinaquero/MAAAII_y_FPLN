@@ -248,7 +248,7 @@ class ArcEager():
 
 
 
-    def LA_is_correct(self, state: State) -> bool:
+    def LA_is_correct(self, state: State, sent) -> bool:
         """
         Determines if a LEFT-ARC (LA) transition is the correct action for the current parsing state.
 
@@ -268,12 +268,12 @@ class ArcEager():
         if (len(stack) == 0) or (len(buffer) == 0):
             return False
 
-        for arc in self.gold_arcs(buffer):
+        for arc in self.gold_arcs(sent):
             if (arc[0] == buffer[0].id) and (arc[2] == stack[-1].id):
                 return True
         return False
     
-    def RA_is_correct(self, state: State) -> bool:
+    def RA_is_correct(self, state: State, sent) -> bool:
         """
         Determines if a RIGHT-ARC (RA) transition is the correct action for the current parsing state.
 
@@ -293,7 +293,7 @@ class ArcEager():
         if (len(stack) == 0) or (len(buffer) == 0):
             return False
 
-        for arc in self.gold_arcs(state.B):
+        for arc in self.gold_arcs(sent):
             if (arc[0] ==stack[-1].id) and (arc[2]==buffer[0].id):
                 return True
             
@@ -327,7 +327,7 @@ class ArcEager():
         
         return True
 
-    def REDUCE_is_correct(self, state: State) -> bool:
+    def REDUCE_is_correct(self, state: State, sent) -> bool:
         """
         Determines if applying a REDUCE transition is the correct action for the current parsing state.
 
@@ -351,7 +351,7 @@ class ArcEager():
         stack = state.S
         arcs = state.A
 
-        for arc in arcs:
+        for arc in self.gold_arcs(sent):
             if (arc[0] == stack[-1].id) and any(token.id == arc[2] for token in buffer):
                 return False
         return True
@@ -373,6 +373,9 @@ class ArcEager():
         
         stack = state.S
         arcs = state.A
+
+        if len(stack) == 0:
+            return False
 
         for arc in arcs:
             if arc[2] == stack[-1].id:
@@ -409,11 +412,11 @@ class ArcEager():
             stack = state.S
             buffer = state.B
             
-            if self.LA_is_valid(state) and self.LA_is_correct(state):
+            if self.LA_is_valid(state) and self.LA_is_correct(state, sent):
                 #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
                 #Update the state by applying the LA transition using the function apply_transition
-                for arc in self.gold_arcs:
-                    if arc[0] == buffer[-1].id and arc[2] == stack[-1].id:
+                for arc in self.gold_arcs(sent):
+                    if arc[0] == buffer[0].id and arc[2] == stack[-1].id:
                         transition = Transition(self.LA, arc[1])
                         samples.append(Sample(state, transition))
                         self.apply_transition(state, transition)
@@ -422,11 +425,11 @@ class ArcEager():
                 if (len(samples) > 0) and (samples[-1].transition.action == self.LA):
                     continue
 
-            if self.RA_is_valid(state) and self.RA_is_correct(state):
+            if self.RA_is_valid(state) and self.RA_is_correct(state, sent):
                 #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
                 #Update the state by applying the RA transition using the function apply_transition
-                for arc in self.gold_arcs:
-                    if arc[0] == stack[-1].id and arc[2] == buffer[-1].id:
+                for arc in self.gold_arcs(sent):
+                    if arc[0] == stack[-1].id and arc[2] == buffer[0].id:
                         transition = Transition(self.RA, arc[1])
                         samples.append(Sample(state, transition))
                         self.apply_transition(state, transition)
@@ -435,11 +438,11 @@ class ArcEager():
                 if (len(samples) > 0) and (samples[-1].transition.action == self.RA):
                     continue
 
-            elif self.REDUCE_is_valid(state) and self.REDUCE_is_correct(state):
+            elif self.REDUCE_is_valid(state) and self.REDUCE_is_correct(state, sent):
                 #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
                 #Update the state by applying the REDUCE transition using the function apply_transition
                 reduce = True
-                for arc in self.gold_arcs:
+                for arc in self.gold_arcs(sent):
                     if arc[0] == stack[-1].id and any(token.id == arc[2] for token in buffer):
                         reduce = False
                         break
@@ -517,7 +520,7 @@ class ArcEager():
         elif t == self.REDUCE and self.REDUCE_is_valid(state): 
             # REDUCE transition logic: to be implemented
             # Remove from state the word from the top of the stack
-            del(stack[s])
+            del(stack[-1])
 
         else:
             # SHIFT transition logic: Already implemented! Use it as a basis to implement the others

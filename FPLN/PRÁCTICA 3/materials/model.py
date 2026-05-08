@@ -151,46 +151,47 @@ class ParserMLP:
                 dependency = "<NONE>"
             y_dependency.append(self.dependency_to_id[dependency])
 
-            X_words = np.array(X_words)
-            X_pos = np.array(X_pos)
-            y_action = np.array(y_action)
-            y_dependency = np.array(y_dependency)
+        X_words = np.array(X_words)
+        X_pos = np.array(X_pos)
+        y_action = np.array(y_action)
+        y_dependency = np.array(y_dependency)
 
-            # creamos el modelo
-            n_word_feats = X_words.shape[1]       # miramos el número de features por palabra para meterlo como tamaño del input del modelo
-            n_pos_feats = X_pos.shape[1]
+        # creamos el modelo
+        n_word_feats = X_words.shape[1]       # miramos el número de features por palabra para meterlo como tamaño del input del modelo
+        n_pos_feats = X_pos.shape[1]
 
-            word_input = tf.keras.layers.Input(shape=(n_word_feats,))
-            pos_input = tf.keras.layers.Input(shape=(n_pos_feats,))
+        word_input = tf.keras.layers.Input(shape=(n_word_feats,))
+        pos_input = tf.keras.layers.Input(shape=(n_pos_feats,))
 
-            word_emb = tf.keras.layers.Embedding(input_dim=len(self.word_to_id), output_dim=self.word_emb_dim)(word_input)
-            pos_emb = tf.keras.layers.Embedding(input_dim=len(self.pos_to_id), output_dim=32)(pos_input)        # pusimos 32 como pos_embedding_size
+        word_emb = tf.keras.layers.Embedding(input_dim=len(self.word_to_id), output_dim=self.word_emb_dim)(word_input)
+        pos_emb = tf.keras.layers.Embedding(input_dim=len(self.pos_to_id), output_dim=32)(pos_input)        # pusimos 32 como pos_embedding_size
 
-            word_flat = tf.keras.layers.Flatten()(word_emb)
-            pos_flat = tf.keras.layers.Flatten()(pos_emb)
+        word_flat = tf.keras.layers.Flatten()(word_emb)
+        pos_flat = tf.keras.layers.Flatten()(pos_emb)
 
-            concatenation = tf.keras.layers.Concatenate()([word_flat, pos_flat])
+        concatenation = tf.keras.layers.Concatenate()([word_flat, pos_flat])
 
-            hidden = tf.keras.layers.Dense(self.hidden_dim, activation="relu")(concatenation)
+        hidden = tf.keras.layers.Dense(self.hidden_dim, activation="relu")(concatenation)
 
-            action_output = tf.keras.layers.Dense(len(self.action_to_id), activation="softmax", name="action_output")(hidden)
-            dependency_output = tf.keras.layers.Dense(len(self.dependency_to_id), activation="softmax", name="dependency_output")(hidden)
+        action_output = tf.keras.layers.Dense(len(self.action_to_id), activation="softmax", name="action_output")(hidden)
+        dependency_output = tf.keras.layers.Dense(len(self.dependency_to_id), activation="softmax", name="dependency_output")(hidden)
 
-            self.model = tf.keras.Model(inputs=[word_input, pos_input], outputs=[action_output, dependency_output])
+        self.model = tf.keras.Model(inputs=[word_input, pos_input], outputs=[action_output, dependency_output])
 
-            # compilamos y entrenamos el modelo
-            self.model.compile(
-                optimizer="adam", 
-                loss={"action_output": "categorical_crossentropy", "dependency_output": "categorical_crossentropy"},
-                metrics={"action_output": "accuracy", "dependency_output": "accuracy"}
-            )
+        # compilamos y entrenamos el modelo
+        self.model.compile(
+            optimizer="adam",
+            # usamos sparse_categorical_crossentropy porque nuestros outputs (acciones) son enteros, no están en one-hot encoding
+            loss={"action_output": "sparse_categorical_crossentropy", "dependency_output": "sparse_categorical_crossentropy"},
+            metrics={"action_output": "accuracy", "dependency_output": "accuracy"}
+        )
 
-            self.model.fit(
-                [X_words, X_pos],
-                {"action_output": y_action, "dependency_output": y_dependency},
-                epochs=self.epochs,
-                batch_size=self.batch_size,
-            )
+        self.model.fit(
+            [X_words, X_pos],
+            {"action_output": y_action, "dependency_output": y_dependency},
+            epochs=self.epochs,
+            batch_size=self.batch_size,
+        )
 
     def evaluate(self, samples: list['Sample']):
         """
