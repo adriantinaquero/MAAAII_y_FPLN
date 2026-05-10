@@ -115,8 +115,9 @@ class ParserMLP:
             index = self.dependency_to_id[dependency]
             self.id_to_dependency[index] = dependency 
 
-        # una vez creados los diccionarios, mapeamos las palabras
+        # una vez creados los diccionarios, mapeamos las palabras del conjunto de entrenamiento y del de validación (dev)
         X_words, X_pos, y_action, y_dependency = self.samples_to_dataset(training_samples)
+        X_words_dev, X_pos_dev, y_action_dev, y_dependency_dev = self.samples_to_dataset(dev_samples)
 
         # creamos el modelo
         n_word_feats = X_words.shape[1]       # miramos el número de features por palabra para meterlo como tamaño del input del modelo
@@ -151,6 +152,13 @@ class ParserMLP:
         self.model.fit(
             [X_words, X_pos],
             {"action_output": y_action, "dependency_output": y_dependency},
+            validation_data=(
+                [X_words_dev, X_pos_dev],
+                {
+                    "action_output": y_action_dev,
+                    "dependency_output": y_dependency_dev
+                }
+            ),
             epochs=self.epochs,
             batch_size=self.batch_size,
         )
