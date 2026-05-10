@@ -1,6 +1,7 @@
 from conllu_reader import ConlluReader
 from algorithm import ArcEager
 from model import ParserMLP
+from postprocessor import PostProcessor
 
 
 def read_file(reader, path):
@@ -87,12 +88,14 @@ model.train(train_samples, dev_samples)
 model.evaluate(dev_samples)
 
 # obtenemos arboles de conjunto de test
-parsed_test = model.run(test_trees)
+test_trees = model.run(test_trees)
 
 # guardamos el output en un archivo CoNLL-U
-output_path = "test_output.conllu"
+reader.write_conllu_file("test_output.conllu", test_trees)
 
-with open(output_path, "w", encoding="utf-8") as f:
-    for sent in parsed_test:
-        f.write(sent)
-        f.write("\n\n")
+# postprocesado
+postprocessor = PostProcessor()
+processed_trees = postprocessor.postprocess("test_output.conllu")
+
+# guardar resultado postprocesado
+reader.write_conllu_file("output_test_postprocessed.conllu", processed_trees)

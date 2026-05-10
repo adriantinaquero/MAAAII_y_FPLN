@@ -329,16 +329,17 @@ class ParserMLP:
 
             states = new_states
 
-        # ahora vamos a reconstruir el estado final de cada oración al árbol original en formato CoNLL
-        parsed_sents = []
+        # reconstruimos los árboles finales
+        parsed_trees = []
 
         for sent_id in sorted(final_states.keys()):
             sent = sents[sent_id]
             state = final_states[sent_id]
 
-            parsed_sents.append(self.state_to_conll(sent, state))
+            parsed_tree = self.state_to_tree(sent, state)
+            parsed_trees.append(parsed_tree)
 
-        return parsed_sents  # devuelve la lista de frases
+        return parsed_trees
 
     # función auxiliar que mapea una lista de muestras con sus IDs
     def samples_to_dataset(self, samples):        
@@ -388,41 +389,45 @@ class ParserMLP:
         )
 
 
-    # función auxiliar que reconstruye un árbol en formato ConLL a partir del estado final de una oración
-    def state_to_conll(self, sent, state):
+    # función auxiliar que reconstruye el árbol a partir del estado final
+    def state_to_tree(self, sent, state):
 
-        # reconstruimos arcs
+        # diccionario {dependent_id: (head, dep)}
         arc_dict = {}
 
         for head, dep, dependent in state.A:
             arc_dict[dependent] = (head, dep)
 
-        lines = []
+        parsed_tree = []
 
         for token in sent:
 
+            # ROOT se deja igual
             if token.id == 0:
-                continue  # ROOT no se imprime en CoNLL-U
+                parsed_tree.append(token)
+                continue
 
-            head, dep = arc_dict.get(token.id, (0, "_"))
+            # si el token recibió arco
+            if token.id in arc_dict:
+                head, dep = arc_dict[token.id]
+            else:
+                # fallback por si quedó sin head
+                head, dep = 0, "dep"
 
-            line = [
-                str(token.id),
+            new_token = Token(
+                token.id,
                 token.form,
                 token.lemma,
                 token.upos,
                 token.cpos,
-                token.feats if token.feats else "_",
-                str(head),
-                dep,
-                "_",
-                "_"
-            ]
+                token.feats,
+                head,
+                dep
+            )
 
-            lines.append("\t".join(line))
+            parsed_tree.append(new_token)
 
-        return "\n".join(lines)
-
+        return parsed_tree
 
 if __name__ == "__main__":
     
