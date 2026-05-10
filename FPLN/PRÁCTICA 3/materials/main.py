@@ -62,16 +62,17 @@ print ("\n ------ TODO: Implement the rest of the assignment ------")
 # 3. Process the file: trees = postprocessor.postprocess(path)
 # 4. Save the processed trees to a new output file.
 
+
 train_samples = []
 for tree in train_trees:
-    samples = arc_eager.oracle(tree)
-    train_samples.extend(samples)
+    train_samples.extend(arc_eager.oracle(tree))
 
 dev_samples = []
 for tree in dev_trees:
-    samples = arc_eager.oracle(tree)
-    dev_samples.extend(samples)
+    dev_samples.extend(arc_eager.oracle(tree))
 
+
+# creamos el modelo
 model = ParserMLP(
     word_emb_dim=100,
     hidden_dim=64,
@@ -79,6 +80,19 @@ model = ParserMLP(
     batch_size=64
 )
 
+# entrenamos el modelo
 model.train(train_samples, dev_samples)
 
+# evaluamos sobre conjunto de validación
 model.evaluate(dev_samples)
+
+# obtenemos arboles de conjunto de test
+parsed_test = model.run(test_trees)
+
+# guardamos el output en un archivo CoNLL-U
+output_path = "test_output.conllu"
+
+with open(output_path, "w", encoding="utf-8") as f:
+    for sent in parsed_test:
+        f.write(sent)
+        f.write("\n\n")

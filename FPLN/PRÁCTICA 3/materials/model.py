@@ -225,10 +225,11 @@ class ParserMLP:
 
         # cada elemento de la lista es el estado actual de cada oración, es decir [sent1_state, sent2_state, sent3_state...]
         states = []
-
-        for sent in sents:
+        for i, sent in enumerate(sents):
             state = arc_eager.create_initial_state(sent)
-            states.append(state)
+            states.append((i, state))
+
+        final_states = {}              # estados finales que va a devolver la función
 
         while len(states) > 0:
             X_words = []
@@ -236,7 +237,7 @@ class ParserMLP:
             states_to_predict = []    # estados que vamos a predecir (1 por oración)
 
             # extraemos features
-            for state in states:
+            for sent_id, state in states:
                 if arc_eager.final_state(state) == True:      # ignoramos oraciones cuyo estado ya sea final
                     continue
 
@@ -261,7 +262,7 @@ class ParserMLP:
 
                 X_words.append(word_ids)
                 X_pos.append(pos_ids)
-                states_to_predict.append(state)
+                states_to_predict.append((sent_id, state))
 
             # si no quedan estados que predecir, paramos
             if len(states_to_predict) == 0:
@@ -276,8 +277,7 @@ class ParserMLP:
             new_states = []
 
             # procesamos predicciones
-            for i in range(len(states_to_predict)):
-                state = states_to_predict[i]
+            for i, (sent_id, state) in enumerate(states_to_predict):
                 # ordenamos las acciones por probabilidad
                 sorted_actions = np.argsort(predicted_actions[i])[::-1]    # [::-1]  invierte el array para ordenar de mayor a menor
                 # mejor dependency
@@ -322,14 +322,26 @@ class ParserMLP:
 
                 # aplicamos transición
                 arc_eager.apply_transition(state, selected_transition)
-                new_states.append(state)
+                if arc_eager.final_state(state):
+                    final_states[sent_id] = state
+                else:
+                    new_states.append((sent_id, state))
 
             states = new_states
 
-        return
+        # ahora vamos a reconstruir el estado final de cada oración al árbol original en formato CoNLL
+        parsed_sents = []
 
+        for sent_id in sorted(final_states.keys()):
+            sent = sents[sent_id]
+            state = final_states[sent_id]
 
-    def samples_to_dataset(self, samples):        # función auxiliar que mapea una lista de muestras con sus IDs
+            parsed_sents.append(self.state_to_conll(sent, state))
+
+        return parsed_sents  # devuelve la lista de frases
+
+    # función auxiliar que mapea una lista de muestras con sus IDs
+    def samples_to_dataset(self, samples):        
         X_words = []
         X_pos = []
         y_action = []
@@ -374,6 +386,42 @@ class ParserMLP:
             np.array(y_action),
             np.array(y_dependency)
         )
+
+
+    # función auxiliar que reconstruye un árbol en formato ConLL a partir del estado final de una oración
+    def state_to_conll(self, sent, state):
+
+        # reconstruimos arcs
+        arc_dict = {}
+
+        for head, dep, dependent in state.A:
+            arc_dict[dependent] = (head, dep)
+
+        lines = []
+
+        for token in sent:
+
+            if token.id == 0:
+                continue  # ROOT no se imprime en CoNLL-U
+
+            head, dep = arc_dict.get(token.id, (0, "_"))
+
+            line = [
+                str(token.id),
+                token.form,
+                token.lemma,
+                token.upos,
+                token.cpos,
+                token.feats if token.feats else "_",
+                str(head),
+                dep,
+                "_",
+                "_"
+            ]
+
+            lines.append("\t".join(line))
+
+        return "\n".join(lines)
 
 
 if __name__ == "__main__":
