@@ -391,6 +391,7 @@ class ParserMLP:
 
                 # aplicamos transición
                 arc_eager.apply_transition(state, selected_transition)
+                new_states.append(state)
 
             states = new_states
 

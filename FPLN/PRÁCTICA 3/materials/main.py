@@ -1,6 +1,7 @@
-
 from conllu_reader import ConlluReader
 from algorithm import ArcEager
+from model import ParserMLP
+
 
 def read_file(reader, path):
     trees = reader.read_conllu_file(path)
@@ -60,9 +61,6 @@ print ("\n ------ TODO: Implement the rest of the assignment ------")
 # 2. Specify the file path: path = "<YOUR_PATH_TO_OUTPUT_FILE>"
 # 3. Process the file: trees = postprocessor.postprocess(path)
 # 4. Save the processed trees to a new output file.
-
-
-from model import ParserMLP
 
 train_samples = []
 for tree in train_trees:
