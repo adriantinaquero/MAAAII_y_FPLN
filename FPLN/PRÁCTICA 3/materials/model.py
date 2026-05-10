@@ -116,45 +116,7 @@ class ParserMLP:
             self.id_to_dependency[index] = dependency 
 
         # una vez creados los diccionarios, mapeamos las palabras
-        X_words = []
-        X_pos = []
-        y_action = []
-        y_dependency = []
-
-        for sample in training_samples:
-            feats = sample.state_to_feats()
-            n = len(feats) // 2
-            feat_words = feats[:n]
-            feat_pos = feats[n:]
-
-            word_ids = []
-            for word in feat_words:
-                if word in self.word_to_id:
-                    word_ids.append(self.word_to_id[word])
-                else:
-                    word_ids.append(self.word_to_id["<UNK>"])
-
-            pos_ids = []
-            for p in feat_pos:
-                if p in self.pos_to_id:
-                    pos_ids.append(self.pos_to_id[p])
-                else:
-                    pos_ids.append(self.pos_to_id["<UNK>"])
-
-            X_words.append(word_ids)
-            X_pos.append(pos_ids)
-
-            y_action.append(self.action_to_id[sample.transition.action])
-
-            dependency = sample.transition.dependency
-            if dependency is None:
-                dependency = "<NONE>"
-            y_dependency.append(self.dependency_to_id[dependency])
-
-        X_words = np.array(X_words)
-        X_pos = np.array(X_pos)
-        y_action = np.array(y_action)
-        y_dependency = np.array(y_dependency)
+        X_words, X_pos, y_action, y_dependency = self.samples_to_dataset(training_samples)
 
         # creamos el modelo
         n_word_feats = X_words.shape[1]       # miramos el número de features por palabra para meterlo como tamaño del input del modelo
@@ -205,47 +167,8 @@ class ParserMLP:
         """
 
         # traducimos los samples a sus IDs
-        X_words = []
-        X_pos = []
-        y_action = []
-        y_dependency = []
-
-        for sample in samples:
-
-            feats = sample.state_to_feats()
-            n = len(feats) // 2
-            feat_words = feats[:n]
-            feat_pos = feats[n:]
-
-            word_ids = []
-            for w in feat_words:
-                if w in self.word_to_id:
-                    word_ids.append(self.word_to_id[w])
-                else:
-                    word_ids.append(self.word_to_id["<UNK>"])
-
-            pos_ids = []
-            for p in feat_pos:
-                if p in self.pos_to_id:
-                    pos_ids.append(self.pos_to_id[p])
-                else:
-                    pos_ids.append(self.pos_to_id["<UNK>"])
-
-            X_words.append(word_ids)
-            X_pos.append(pos_ids)
-
-            y_action.append(self.action_to_id[sample.transition.action])
-
-            dependency = sample.transition.dependency
-            if dependency is None:
-                dependency = "<NONE>"
-            y_dependency.append(self.dependency_to_id[dependency])
-
-        X_words = np.array(X_words)
-        X_pos = np.array(X_pos)
-        y_action = np.array(y_action)
-        y_dependency = np.array(y_dependency)
-
+        X_words, X_pos, y_action, y_dependency = self.samples_to_dataset(samples)
+        
         # evaluación
         results = self.model.evaluate(
             [X_words, X_pos],
@@ -396,6 +319,53 @@ class ParserMLP:
             states = new_states
 
         return
+
+
+    def samples_to_dataset(self, samples):        # función auxiliar que mapea una lista de muestras con sus IDs
+        X_words = []
+        X_pos = []
+        y_action = []
+        y_dependency = []
+
+        for sample in samples:
+
+            feats = sample.state_to_feats()
+
+            n = len(feats) // 2
+            feat_words = feats[:n]
+            feat_pos = feats[n:]
+
+            word_ids = []
+            for w in feat_words:
+                if w in self.word_to_id:
+                    word_ids.append(self.word_to_id[w])
+                else:
+                    word_ids.append(self.word_to_id["<UNK>"])
+
+            pos_ids = []
+            for p in feat_pos:
+                if p in self.pos_to_id:
+                    pos_ids.append(self.pos_to_id[p])
+                else:
+                    pos_ids.append(self.pos_to_id["<UNK>"])
+
+            X_words.append(word_ids)
+            X_pos.append(pos_ids)
+
+            y_action.append(self.action_to_id[sample.transition.action])
+
+            dependency = sample.transition.dependency
+            if dependency is None:
+                dependency = "<NONE>"
+
+            y_dependency.append(self.dependency_to_id[dependency])
+
+        return (
+            np.array(X_words),
+            np.array(X_pos),
+            np.array(y_action),
+            np.array(y_dependency)
+        )
 
 
 if __name__ == "__main__":
