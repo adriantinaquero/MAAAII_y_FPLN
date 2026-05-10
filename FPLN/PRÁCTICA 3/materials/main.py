@@ -91,11 +91,11 @@ model.evaluate(dev_samples)
 test_trees = model.run(test_trees)
 
 # guardamos el output en un archivo CoNLL-U
-reader.write_conllu_file("test_output.conllu", test_trees)
+reader.write_conllu_file("FPLN/PRÁCTICA 3/materials/test_output.conllu", test_trees)
 
 # postprocesado
 postprocessor = PostProcessor()
-processed_trees = postprocessor.postprocess("test_output.conllu")
+processed_trees = postprocessor.postprocess("FPLN/PRÁCTICA 3/materials/test_output.conllu")
 
 # guardar resultado postprocesado
-reader.write_conllu_file("output_test_postprocessed.conllu", processed_trees)
+reader.write_conllu_file("FPLN/PRÁCTICA 3/materials/output_test_postprocessed.conllu", processed_trees)
