@@ -1,7 +1,7 @@
 from my_token import Token
 import numpy as np
 import tensorflow as tf
-from algorithm import Sample, ArcEager, Transition
+from algorithm2 import Sample, ArcEager, Transition
 
 
 class ParserMLP:
@@ -143,7 +143,7 @@ class ParserMLP:
 
         # compilamos y entrenamos el modelo
         self.model.compile(
-            optimizer="adam",
+            optimizer= tf.keras.optimizers.Adam(learning_rate=0.001),
             # usamos sparse_categorical_crossentropy porque nuestros outputs (acciones) son enteros, no están en one-hot encoding
             loss={"action_output": "sparse_categorical_crossentropy", "dependency_output": "sparse_categorical_crossentropy"},
             metrics={"action_output": "accuracy", "dependency_output": "accuracy"}
@@ -308,17 +308,26 @@ class ParserMLP:
                             valid = True
 
                     if valid == True:
-                        # SHIFT y REDUCE no tienen dependency
+                        # 1. Si la acción es SHIFT o REDUCE, no llevan dependencia
                         if action == ArcEager.SHIFT or action == ArcEager.REDUCE:
                             selected_transition = Transition(action)
 
+                        # 2. Si es un arco (LA o RA), necesitamos una etiqueta que NO sea <NONE>
                         else:
-                            if dependency == "<NONE>":       # Si el modelo no sabe qué dependencia es, ponemos "dep" genérica 
-                                dependency = "dep"
+                            # Tomamos las probabilidades de esta predicción
+                            dep_probs = predicted_dependencies[i].copy()
+                            
+                            # Buscamos el ID de <NONE> y le quitamos toda posibilidad
+                            none_id = self.dependency_to_id["<NONE>"]
+                            dep_probs[none_id] = -1.0 
+                            
+                            # Ahora el argmax nos dará la etiqueta real más probable
+                            best_dep_id = np.argmax(dep_probs)
+                            dependency = self.id_to_dependency[best_dep_id]
 
                             selected_transition = Transition(action, dependency)
 
-                        break
+                        break # Ya encontramos la transición válida, salimos del for de acciones
 
                 # aplicamos transición
                 arc_eager.apply_transition(state, selected_transition)
