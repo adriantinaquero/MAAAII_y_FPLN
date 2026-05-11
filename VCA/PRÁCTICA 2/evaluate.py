@@ -1,0 +1,76 @@
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+
+def evaluate_model(model, test_loader, history, device, num_classes=2):
+
+    # EVALUACIÓN CUANTITATIVA
+
+    model.eval()
+
+    all_preds = []
+    all_labels = []
+
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images = images.to(device)
+
+            outputs = model(images).squeeze(1)
+            preds = (outputs > 0.5).float()
+
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(labels.numpy())
+
+    all_preds = np.array(all_preds)
+    all_labels = np.array(all_labels)
+
+    cm = confusion_matrix(all_labels, all_preds)
+
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot(cmap="Blues")
+    plt.title("Confusion Matrix")
+    plt.show()
+        
+    accuracy = np.mean(all_preds == all_labels)
+    print(f"Accuracy global: {accuracy:.4f}")
+
+    print("\nSensibilidad y Especificidad por clase:")
+
+    for i in range(num_classes):
+
+        TP = cm[i, i]
+        FN = cm[i, :].sum() - TP
+        FP = cm[:, i].sum() - TP
+        TN = cm.sum() - (TP + FN + FP)
+
+        sensitivity = TP / (TP + FN)
+        specificity = TN / (TN + FP)
+        precision = TP / (TP + FP)
+        vpn = TN / (TN + FN)
+        f1_score = (2 * sensitivity * precision) / (sensitivity + precision)
+        print(f"Clase {i}:\t"
+              f"Sensibilidad={sensitivity:.4f}\t"
+              f"Especificidad={specificity:.4f}\t"
+              f"Precisión={precision:.4f}\t"
+              f"VPN={vpn:.4f}\t"
+              f"F1={f1_score}")
+
+    epochs = len(history["val_loss"])
+    val_range = range(1, epochs + 1)
+    train_range = np.linspace(1, epochs, len(history["train_loss"]))
+
+    plt.figure()
+    plt.plot(train_range, history["train_loss"], 'k', label="Train")  # eje y en escala logarítmica
+    plt.plot(val_range, history["val_loss"], 'r', label="Val")
+    plt.title("Loss")
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.plot(train_range, history["train_acc"], 'k', label="Train")
+    plt.plot(val_range, history["val_acc"], 'r', label="Val")
+    plt.title("Accuracy")
+    plt.legend()
+    plt.show()

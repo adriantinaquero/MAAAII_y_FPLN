@@ -10,7 +10,7 @@ def double_conv(in_channels, out_channels):
     )
 
 
-class UNet(nn.Module):
+class BaseLine(nn.Module):
 
     def __init__(self, input_channels, n_class):
         super().__init__()
@@ -21,7 +21,7 @@ class UNet(nn.Module):
         self.dconv_down4 = double_conv(256, 512)        
 
         self.maxpool = nn.MaxPool2d(2)
-        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)        
+        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False)        
 
         self.dconv_up3 = double_conv(256 + 512, 256)
         self.dconv_up2 = double_conv(128 + 256, 128)
