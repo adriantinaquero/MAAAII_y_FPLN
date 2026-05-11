@@ -1,5 +1,5 @@
 from conllu_reader import ConlluReader
-from algorithm2 import ArcEager
+from algorithm import ArcEager
 from model import ParserMLP
 from postprocessor import PostProcessor
 

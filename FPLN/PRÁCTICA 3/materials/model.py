@@ -1,7 +1,7 @@
 from my_token import Token
 import numpy as np
 import tensorflow as tf
-from algorithm2 import Sample, ArcEager, Transition
+from algorithm import Sample, ArcEager, Transition
 
 
 class ParserMLP:

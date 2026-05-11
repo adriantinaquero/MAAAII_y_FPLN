@@ -1,6 +1,6 @@
 from state import State
 from my_token import Token
-
+import copy
 
 class Transition(object):
     """
@@ -11,7 +11,7 @@ class Transition(object):
     - dependency (str): The type of dependency relationship (only for LEFT-ARC and RIGHT-ARC, otherwise it'll be None), corresponding to the deprel column
     """
 
-    def __init__(self, action: int, dependency: str = None):
+    def __init__(self, action: str, dependency: str = None):
         self._action = action
         self._dependency = dependency
 
@@ -46,7 +46,7 @@ class Sample(object):
     Methods:
         state_to_feats(nbuffer_feats: int = 2, nstack_feats: int = 2): Extracts features from the parsing state.
     """
-
+    
     def __init__(self, state: State, transition: Transition):
         """
         Initializes a new instance of the Sample class.
@@ -68,7 +68,6 @@ class Sample(object):
         """
         return self._state
 
-
     @property
     def transition(self):
         """
@@ -78,7 +77,6 @@ class Sample(object):
             Transition: The transition action representing the parser's decision at this sample's state.
         """
         return self._transition
-    
 
     def state_to_feats(self, nbuffer_feats: int = 2, nstack_feats: int = 2):
         """
@@ -115,10 +113,12 @@ class Sample(object):
 
                 Output: ['ROOT', 'Distribution', 'license', 'does', 'ROOT_UPOS', 'NOUN', 'NOUN', 'AUX']
         """
+        
         feats = []
-
-        # stack
         stack = self._state.S
+        buffer = self._state.B
+
+        # palabras del stack (de arriba a abajo)
         for i in range(nstack_feats):
             if len(stack) > i:
                 token = stack[-(i+1)]
@@ -126,8 +126,7 @@ class Sample(object):
             else:
                 feats.append("<PAD>")
 
-        # buffer
-        buffer = self._state.B
+        # palabras del buffer
         for i in range(nbuffer_feats):
             if len(buffer) > i:
                 token = buffer[i]
@@ -151,7 +150,7 @@ class Sample(object):
             else:
                 feats.append("<PAD>")
 
-        return feats        
+        return feats
 
     def __str__(self):
         """
@@ -161,7 +160,6 @@ class Sample(object):
             str: A string representing the state and transition of the sample.
         """
         return f"Sample - State:\n\n{self._state}\nSample - Transition: {self._transition}"
-
 
 
 class ArcEager():
@@ -185,7 +183,7 @@ class ArcEager():
         apply_transition(state: State, transition: Transition): Applies a given transition to the current state.
         gold_arcs(sent: list[Token]): Extracts gold-standard dependency arcs from a sentence.
     """
-
+    
     LA = "LEFT-ARC"
     RA = "RIGHT-ARC"
     SHIFT = "SHIFT"
@@ -237,16 +235,24 @@ class ArcEager():
         buffer = state.B
         stack = state.S
         arcs = state.A
-
+        
         if (len(stack) == 0) or (len(buffer) == 0):
             return False
         
-        last_in = stack[-1].id
-        for arc in arcs:
-            if arc[2] == last_in or last_in == 0: return False      # 0 es el id de "ROOT"
+        # if not state.S or not state.B:
+        #     return False
+        
+        last_in = state.S[-1].id
+        
+        # el elemento de la pila no puede ser ROOT (id 0) ni puede tener ya un padre
+        if last_in == 0:
+            return False
+        
+        for _, _, dependent in arcs:
+            if dependent == last_in:
+                return False
+            
         return True
-
-
 
     def LA_is_correct(self, state: State, sent) -> bool:
         """
@@ -261,44 +267,20 @@ class ArcEager():
         Returns:
             bool: True if a LEFT-ARC transition is the correct action in the current state, False otherwise.
         """
-
+        
         buffer = state.B
         stack = state.S
-
-        if (len(stack) == 0) or (len(buffer) == 0):
+        
+        if self.LA_is_valid(state) == False:
             return False
-
-        for arc in self.gold_arcs(sent):
-            if (arc[0] == buffer[0].id) and (arc[2] == stack[-1].id):
-                return True
-        return False
-    
-    def RA_is_correct(self, state: State, sent) -> bool:
-        """
-        Determines if a RIGHT-ARC (RA) transition is the correct action for the current parsing state.
-
-        This method assesses whether applying a RIGHT-ARC transition aligns with the correct 
-        dependency structure of the sentence, based on the parser's current state.
-
-        Parameters:
-            state (State): The current state of the parser, including the stack and buffer.
-
-        Returns:
-            bool: True if a RIGHT-ARC transition is the correct action in the current state, False otherwise.
-        """
-
-        buffer = state.B
-        stack = state.S
-
-        if (len(stack) == 0) or (len(buffer) == 0):
-            return False
-
-        for arc in self.gold_arcs(sent):
-            if (arc[0] ==stack[-1].id) and (arc[2]==buffer[0].id):
+        
+        # es correcto si el primer elemento del buffer es padre del tope de la pila
+        for head, _, dependent in self.gold_arcs(sent):
+            if head == buffer[0].id and dependent == stack[-1].id:
                 return True
             
         return False
-
+    
     def RA_is_valid(self, state: State) -> bool:
         """
         Checks the preconditions in order to apply a right-arc (RA) transition.
@@ -313,7 +295,7 @@ class ArcEager():
         Returns:
             bool: True if a RIGHT-ARC transition can be validly applied in the current state, False otherwise.
         """
-
+        
         buffer = state.B
         stack = state.S
         arcs = state.A
@@ -321,40 +303,38 @@ class ArcEager():
         if (len(stack) == 0) or (len(buffer) == 0):
             return False
         
-        for arc in arcs:
-            if arc[2] == buffer[0].id:
+        # el elemento del buffer no puede tener ya un padre
+        for _, _, dependent in arcs:
+            if dependent == buffer[0].id:
                 return False
-        
+            
         return True
 
-    def REDUCE_is_correct(self, state: State, sent) -> bool:
+    def RA_is_correct(self, state: State, sent) -> bool:
         """
-        Determines if applying a REDUCE transition is the correct action for the current parsing state.
+        Determines if a RIGHT-ARC (RA) transition is the correct action for the current parsing state.
 
-        A REDUCE transition is correct if there is no word in the buffer (state.B) whose head 
-        is the word on the top of the stack (state.S[-1]). This method checks this condition 
-        against the current state of the parser.
-
-        REDUCE can be only correct iff for every word in the buffer, 
-        no word has as head the top word from the stack 
+        This method assesses whether applying a RIGHT-ARC transition aligns with the correct 
+        dependency structure of the sentence, based on the parser's current state.
 
         Parameters:
             state (State): The current state of the parser, including the stack and buffer.
 
         Returns:
-            bool: True if a REDUCE transition is the correct action in the current state, False otherwise.
+            bool: True if a RIGHT-ARC transition is the correct action in the current state, False otherwise.
         """
-        #It is correct to do if there is no word in the state buffer (state.B) which head is 
-        #the word on the top of the stack (state.S[-1])
+
+        if self.RA_is_valid(state) == False:
+            return False
 
         buffer = state.B
         stack = state.S
-        arcs = state.A
-
-        for arc in self.gold_arcs(sent):
-            if (arc[0] == stack[-1].id) and any(token.id == arc[2] for token in buffer):
-                return False
-        return True
+        
+        for head, _, dependent in self.gold_arcs(sent):
+            if head == stack[-1].id and dependent == buffer[0].id:
+                return True
+            
+        return False
 
     def REDUCE_is_valid(self, state: State) -> bool:
         """
@@ -373,15 +353,51 @@ class ArcEager():
         
         stack = state.S
         arcs = state.A
-
+        
         if len(stack) == 0:
             return False
-
-        for arc in arcs:
-            if arc[2] == stack[-1].id:
-                return True
         
+        # el elemento de la pila debe tener ya un padre
+        for _, _, dependent in arcs:
+            if dependent == stack[-1].id:
+                return True
+            
         return False
+
+    def REDUCE_is_correct(self, state: State, sent) -> bool:
+        """
+        Determines if applying a REDUCE transition is the correct action for the current parsing state.
+
+        A REDUCE transition is correct if there is no word in the buffer (state.B) whose head 
+        is the word on the top of the stack (state.S[-1]). This method checks this condition 
+        against the current state of the parser.
+
+        REDUCE can be only correct iff for every word in the buffer, 
+        no word has as head the top word from the stack 
+
+        Parameters:
+            state (State): The current state of the parser, including the stack and buffer.
+
+        Returns:
+            bool: True if a REDUCE transition is the correct action in the current state, False otherwise.
+        """
+        
+        #It is correct to do if there is no word in the state buffer (state.B) which head is 
+        #the word on the top of the stack (state.S[-1])
+        
+        if self.REDUCE_is_valid(state) == False:
+            return False
+        
+        buffer = state.B
+        stack = state.S
+
+        # si el último elemento de la pila tiene algún hijo en el buffer, devolvemos False
+        for head, _, dependent in self.gold_arcs(sent):
+            if head == stack[-1].id:
+                if any(token.id == dependent for token in buffer):
+                    return False
+        
+        return True
 
     def oracle(self, sent: list['Token']) -> list['Sample']:
         """
@@ -401,73 +417,41 @@ class ArcEager():
             samples (list['Sample']): A list of Sample instances. Each Sample stores an state instance and a transition instance
             with the information of the outputs to predict (the transition and optionally the dependency label)
         """
-
+        
         state = self.create_initial_state(sent) 
-
-        samples = [] #Store here all training samples for sent
+        samples = []        #Store here all training samples for sent
+        gold = self.gold_arcs(sent)
 
         #Applies the transition system until a final configuration state is reached
         while not self.final_state(state):
+            transition = None
 
             stack = state.S
             buffer = state.B
             
-            if self.LA_is_valid(state) and self.LA_is_correct(state, sent):
-                #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
-                #Update the state by applying the LA transition using the function apply_transition
-                for arc in self.gold_arcs(sent):
-                    if arc[0] == buffer[0].id and arc[2] == stack[-1].id:
-                        transition = Transition(self.LA, arc[1])
-                        samples.append(Sample(state, transition))
-                        self.apply_transition(state, transition)
-                        break
-
-                if (len(samples) > 0) and (samples[-1].transition.action == self.LA):
-                    continue
-
-            if self.RA_is_valid(state) and self.RA_is_correct(state, sent):
-                #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
-                #Update the state by applying the RA transition using the function apply_transition
-                for arc in self.gold_arcs(sent):
-                    if arc[0] == stack[-1].id and arc[2] == buffer[0].id:
-                        transition = Transition(self.RA, arc[1])
-                        samples.append(Sample(state, transition))
-                        self.apply_transition(state, transition)
-                        break
-
-                if (len(samples) > 0) and (samples[-1].transition.action == self.RA):
-                    continue
-
-            elif self.REDUCE_is_valid(state) and self.REDUCE_is_correct(state, sent):
-                #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
-                #Update the state by applying the REDUCE transition using the function apply_transition
-                reduce = True
-                for arc in self.gold_arcs(sent):
-                    if arc[0] == stack[-1].id and any(token.id == arc[2] for token in buffer):
-                        reduce = False
-                        break
-
-                if reduce == True:
-                    transition = Transition(self.REDUCE)
-                    samples.append(Sample(state, transition))
-                    self.apply_transition(state, transition)
-                    continue
-
+            if self.LA_is_correct(state, sent):
+                dependency = next(arc[1] for arc in gold if arc[0] == buffer[0].id and arc[2] == stack[-1].id)
+                transition = Transition(self.LA, dependency)
+            
+            elif self.RA_is_correct(state, sent):
+                dependency = next(arc[1] for arc in gold if arc[0] == stack[-1].id and arc[2] == buffer[0].id)
+                transition = Transition(self.RA, dependency)
+                
+            elif self.REDUCE_is_correct(state, sent):
+                transition = Transition(self.REDUCE)
+                
             else:
-                #If no other transiton can be applied, it's a SHIFT transition
                 transition = Transition(self.SHIFT)
-                #Add current state 'state' (the input) and the transition taken (the desired output) to the list of samples
-                samples.append(Sample(state, transition))
-                #Update the state by applying the SHIFT transition using the function apply_transition
-                self.apply_transition(state,transition)
 
+        # guardamos una copia para que los samples no cambien
+            samples.append(Sample(copy.deepcopy(state), transition))
+            self.apply_transition(state, transition)
 
         #When the oracle ends, the generated arcs must
         #match exactly the gold arcs, otherwise the obtained sequence of transitions is not correct
         assert self.gold_arcs(sent) == state.A, f"Gold arcs {self.gold_arcs(sent)} and generated arcs {state.A} do not match"
-    
-        return samples         
-    
+
+        return samples
 
     def apply_transition(self, state: State, transition: Transition):
         """
@@ -485,50 +469,42 @@ class ArcEager():
         Returns:
             None; the state is modified in place.
         """
-
+        
         # Extract the action and dependency label from the transition
         t = transition.action
         dep = transition.dependency
-
+        
         buffer = state.B
         stack = state.S
         arcs = state.A
-
-        # The top item on the stack and the first item in the buffer
-        s = stack[-1] if state.S else None  # Top of the stack
-        b = buffer[0] if state.B else None   # First in the buffer
-
-        if t == self.LA and self.LA_is_valid(state):
+        
+        if t == self.LA:
             # LEFT-ARC transition logic: to be implemented
             # Add an arc to the state from the top of the buffer to the top of the stack
             # Remove from the state the top word from the stack
-            new_arc = (b.id, dep, s.id)
-            arcs.add(new_arc)
-            del(stack[-1])
+            b = buffer[0]
+            s = stack.pop()
+            arcs.add((b.id, dep, s.id))
 
-
-        elif t == self.RA and self.RA_is_valid(state): 
+        elif t == self.RA:
             # RIGHT-ARC transition
             # Add an arc to the state from the stack top to the buffer head with the specified dependency
             # Move from the state the buffer head to the stack
             # Remove from the state the first item from the buffer
-            new_arc = (s.id, dep, b.id)
-            arcs.add(new_arc)
-            stack.append(buffer[0])
-            del(buffer[0])
+            s = stack[-1]
+            b = buffer.pop(0)
+            arcs.add((s.id, dep, b.id))
+            stack.append(b)
 
-        elif t == self.REDUCE and self.REDUCE_is_valid(state): 
+        elif t == self.REDUCE:
             # REDUCE transition logic: to be implemented
             # Remove from state the word from the top of the stack
-            del(stack[-1])
+            stack.pop()
 
-        else:
+        elif t == self.SHIFT:
             # SHIFT transition logic: Already implemented! Use it as a basis to implement the others
             #This involves moving the top of the buffer to the stack
-            stack.append(b) 
-            del buffer[:1]
-    
-
+            stack.append(buffer.pop(0))
 
     def gold_arcs(self, sent: list['Token']) -> set:
         """
@@ -557,7 +533,8 @@ class ArcEager():
         return gold_arcs
 
 
-   
+
+
 
 
 if __name__ == "__main__":
