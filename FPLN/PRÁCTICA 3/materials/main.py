@@ -1,6 +1,8 @@
-
 from conllu_reader import ConlluReader
 from algorithm import ArcEager
+from model import ParserMLP
+from postprocessor import PostProcessor
+
 
 def read_file(reader, path):
     trees = reader.read_conllu_file(path)
@@ -62,18 +64,16 @@ print ("\n ------ TODO: Implement the rest of the assignment ------")
 # 4. Save the processed trees to a new output file.
 
 
-from model import ParserMLP
-
 train_samples = []
 for tree in train_trees:
-    samples = arc_eager.oracle(tree)
-    train_samples.extend(samples)
+    train_samples.extend(arc_eager.oracle(tree))
 
 dev_samples = []
 for tree in dev_trees:
-    samples = arc_eager.oracle(tree)
-    dev_samples.extend(samples)
+    dev_samples.extend(arc_eager.oracle(tree))
 
+
+# creamos el modelo
 model = ParserMLP(
     word_emb_dim=100,
     hidden_dim=64,
@@ -81,6 +81,26 @@ model = ParserMLP(
     batch_size=64
 )
 
+# entrenamos el modelo
 model.train(train_samples, dev_samples)
 
+# evaluamos sobre conjunto de validación
 model.evaluate(dev_samples)
+
+# obtenemos arboles de conjunto de test
+test_trees = model.run(test_trees)
+
+# guardamos el output en un archivo CoNLL-U
+output_path = "FPLN/PRÁCTICA 3/materials/"
+reader.write_conllu_file(output_path + "test_output.conllu", test_trees)
+
+# postprocesado
+postprocessor = PostProcessor()
+processed_trees = postprocessor.postprocess(output_path + "test_output.conllu")
+
+# guardar resultado postprocesado
+reader.write_conllu_file(output_path + "output_test_postprocessed.conllu", processed_trees)
+
+
+# para evaluar con conll18_ud_eval.py hay que ejecutar esta línea en CMD:
+# "python conll18_ud_eval.py en_partut-ud-test_clean.conllu output_test_postprocessed.conllu"
