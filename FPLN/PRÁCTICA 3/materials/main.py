@@ -2,6 +2,7 @@ from conllu_reader import ConlluReader
 from algorithm import ArcEager
 from model import ParserMLP
 from postprocessor import PostProcessor
+from conll18_ud_eval import load_conllu_file, evaluate
 
 
 def read_file(reader, path):
@@ -99,8 +100,36 @@ postprocessor = PostProcessor()
 processed_trees = postprocessor.postprocess(output_path + "test_output.conllu")
 
 # guardar resultado postprocesado
-reader.write_conllu_file(output_path + "output_test_postprocessed.conllu", processed_trees)
+reader.write_conllu_file(output_path + "test_output_postprocessed.conllu", processed_trees)
 
 
-# para evaluar con conll18_ud_eval.py hay que ejecutar esta línea en CMD:
-# "python conll18_ud_eval.py en_partut-ud-test_clean.conllu output_test_postprocessed.conllu"
+# evaluamos con ayuda del archivo conll18_ud_eval.py
+
+# archivo gold
+gold_file = "FPLN/PRÁCTICA 3/materials/en_partut-ud-test_clean.conllu"
+
+# cargamos CoNLL-U
+gold_ud = load_conllu_file(gold_file)
+output_ud = load_conllu_file(output_path + "test_output_postprocessed.conllu")
+
+# evaluar
+evaluation = evaluate(gold_ud, output_ud)
+
+# imprimimos métricas
+for metric in [
+    "Tokens", "Sentences", "Words",
+    "UPOS", "XPOS", "UFeats", "AllTags",
+    "Lemmas", "UAS", "LAS", "CLAS", "MLAS", "BLEX"
+]:
+    print(
+        "{:11} | Precision: {:6.2f} | Recall: {:6.2f} | F1: {:6.2f}".format(
+            metric,
+            100 * evaluation[metric].precision,
+            100 * evaluation[metric].recall,
+            100 * evaluation[metric].f1
+        )
+    )
+
+print("\nLAS F1 Score: {:.2f}".format(100 * evaluation["LAS"].f1))
+print("MLAS Score: {:.2f}".format(100 * evaluation["MLAS"].f1))
+print("BLEX Score: {:.2f}".format(100 * evaluation["BLEX"].f1))
