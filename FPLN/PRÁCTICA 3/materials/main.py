@@ -91,11 +91,16 @@ model.evaluate(dev_samples)
 test_trees = model.run(test_trees)
 
 # guardamos el output en un archivo CoNLL-U
-reader.write_conllu_file("FPLN/PRÁCTICA 3/materials/test_output.conllu", test_trees)
+output_path = "FPLN/PRÁCTICA 3/materials/"
+reader.write_conllu_file(output_path + "test_output.conllu", test_trees)
 
 # postprocesado
 postprocessor = PostProcessor()
-processed_trees = postprocessor.postprocess("FPLN/PRÁCTICA 3/materials/test_output.conllu")
+processed_trees = postprocessor.postprocess(output_path + "test_output.conllu")
 
 # guardar resultado postprocesado
-reader.write_conllu_file("FPLN/PRÁCTICA 3/materials/output_test_postprocessed.conllu", processed_trees)
+reader.write_conllu_file(output_path + "output_test_postprocessed.conllu", processed_trees)
+
+
+# para evaluar con conll18_ud_eval.py hay que ejecutar esta línea en CMD:
+# "python conll18_ud_eval.py en_partut-ud-test_clean.conllu output_test_postprocessed.conllu"
