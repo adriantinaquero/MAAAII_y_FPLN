@@ -308,26 +308,16 @@ class ParserMLP:
                             valid = True
 
                     if valid == True:
-                        # 1. Si la acción es SHIFT o REDUCE, no llevan dependencia
+                        # si la acción es SHIFT o REDUCE, no llevan dependencia
                         if action == ArcEager.SHIFT or action == ArcEager.REDUCE:
                             selected_transition = Transition(action)
 
-                        # 2. Si es un arco (LA o RA), necesitamos una etiqueta que NO sea <NONE>
                         else:
-                            # Tomamos las probabilidades de esta predicción
-                            dep_probs = predicted_dependencies[i].copy()
-                            
-                            # Buscamos el ID de <NONE> y le quitamos toda posibilidad
-                            none_id = self.dependency_to_id["<NONE>"]
-                            dep_probs[none_id] = -1.0 
-                            
-                            # Ahora el argmax nos dará la etiqueta real más probable
-                            best_dep_id = np.argmax(dep_probs)
-                            dependency = self.id_to_dependency[best_dep_id]
-
+                            if dependency == "<NONE>":       # Si el modelo no sabe qué dependencia es, ponemos "dep" genérica 
+                                dependency = "dep"
                             selected_transition = Transition(action, dependency)
 
-                        break # Ya encontramos la transición válida, salimos del for de acciones
+                        break
 
                 # aplicamos transición
                 arc_eager.apply_transition(state, selected_transition)
