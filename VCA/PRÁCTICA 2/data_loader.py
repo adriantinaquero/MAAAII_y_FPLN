@@ -8,18 +8,14 @@ def load_dataset(image_route: str, mask_route: str, batch_size, train_size=0.7, 
 
     transform_basic = transforms.Compose([
         transforms.ToPILImage(),
-        transforms.Resize((200, 300)),
+        transforms.Resize((208, 312)),
         transforms.ToTensor(),
     ])
-
     transform_aug = transforms.Compose([
         transforms.ToPILImage(),
-        transforms.Resize((416,624)),
-        transforms.Pad(4),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
+        transforms.Resize((208, 312)),
+        transforms.CenterCrop((208, 208)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=0.5,
-          std=0.225),
     ])
 
     dataset_basic = OCTDataset(image_path=image_route, mask_path=mask_route, transform=transform_basic)
@@ -52,7 +48,7 @@ def load_dataset(image_route: str, mask_route: str, batch_size, train_size=0.7, 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     a = load_dataset("VCA/PRÁCTICA 2/dataset/images", "VCA/PRÁCTICA 2/dataset/masks", 128)
-    for i, p in a[0]:
+    for i, p in a[1]:
         for j, k in zip(i, p):
             fig, ax = plt.subplots(1,2, figsize=(8, 4))
             ax[0].imshow(j.permute(1, 2, 0).numpy(), vmin=0, vmax=1, cmap="gray")

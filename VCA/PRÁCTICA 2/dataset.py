@@ -35,8 +35,7 @@ class OCTDataset(Dataset):
             mask = mask[:,:,0]
         if len(image.shape) > 2:
             image = image[:,:,0]
-        mask = (mask > 100).astype(np.uint8) # Make sure that mask is binary
-        # Apply the defined transformations to both image and mask
+        mask = (mask > 100).astype(np.int32)
         if self.transform is not None:
             seed = np.random.randint(2147483647) # make a seed with numpy generator 
             random.seed(seed) # apply this seed to image transforms
@@ -60,6 +59,7 @@ class OCTDataset(Dataset):
         return len(self.img_files)
     
     def show(self, image, mask, title=None):
+        print(np.nonzero(mask.numpy()).__len__())
         fig, ax = plt.subplots(1,2, figsize=(8, 4))
         ax[0].imshow(image, cmap="gray")
         ax[0].axis('off')

@@ -21,8 +21,7 @@ class BaseLine(nn.Module):
         self.dconv_down4 = double_conv(256, 512)        
 
         self.maxpool = nn.MaxPool2d(2)
-        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False)        
-
+        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False)
         self.dconv_up3 = double_conv(256 + 512, 256)
         self.dconv_up2 = double_conv(128 + 256, 128)
         self.dconv_up1 = double_conv(128 + 64, 64)
