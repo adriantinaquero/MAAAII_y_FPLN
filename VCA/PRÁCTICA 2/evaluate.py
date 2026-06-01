@@ -67,9 +67,9 @@ def evaluate_model(model, test_loader, history, device, num_classes=2, thresh=0.
     print(f"{'Dice':<25} {dice[0]:>10.4f} {dice[1]:>10.4f} {dice.mean():>10.4f}")
     print(f"{'Balanced Accuracy':<25} {balanced_acc[0]:>10.4f} {balanced_acc[1]:>10.4f}")
 
-    print(f"{thresh} & {sensitivity.mean()} & {specificity.mean()}\
-           & {precision.mean()} & {vpn.mean()} & {iou.mean()}, &\
-              {dice.mean()} & {balanced_acc.mean()}")
+    print(f"{thresh} & {round(sensitivity.mean(), 3)}\
+ & {round(precision.mean(), 3)} & {round(iou.mean(), 3)}, &\
+ {round(dice.mean(), 3)} & {round(balanced_acc.mean(), 3)} \\\\")
     epochs = len(history["val_loss"])
     val_range = range(1, epochs + 1)
     train_range = np.linspace(1, epochs, len(history["train_loss"]))
@@ -92,7 +92,7 @@ def evaluate_model(model, test_loader, history, device, num_classes=2, thresh=0.
     samples = [images[1]] + rd.choices(images, k=3)
     model.eval()
     with torch.no_grad():
-        for sample in samples:
+        for sample in images:
             image, gt = sample
             image_input = torch.from_numpy(image).unsqueeze(0).float().to(device)
 

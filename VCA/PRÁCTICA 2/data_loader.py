@@ -15,6 +15,7 @@ def load_dataset(image_route: str, mask_route: str, batch_size, train_size=0.7, 
         transforms.ToPILImage(),
         transforms.Resize((208, 312)),
         transforms.CenterCrop((208, 208)),
+        transforms.RandomHorizontalFlip(), 
         transforms.ToTensor(),
     ])
 
