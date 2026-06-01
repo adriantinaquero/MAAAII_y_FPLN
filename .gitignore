@@ -1,3 +1,4 @@
 *.pth
 *.cpython-312.pyc
 *.pyc
+*.zip
