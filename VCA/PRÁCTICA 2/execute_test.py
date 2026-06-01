@@ -10,7 +10,7 @@ if __name__ == "__main__":
     print("Using device:", device)
     if len(sys.argv) != 4:
         print("Usage: python execute_test.py modelpath datasetpath")
-        modelpath = "VCA/PRÁCTICA 2/checkpoints/Baseline.pth"
+        modelpath = "VCA/PRÁCTICA 2/checkpoints/FocalAug.pth"
         image_route = "VCA/PRÁCTICA 2/dataset/images"
         mask_route = "VCA/PRÁCTICA 2/dataset/masks"
         image_route = "None"
@@ -32,4 +32,4 @@ if __name__ == "__main__":
     else:
         test_loader = DataLoader(OCTDataset(image_route, mask_route, transform=transform_basic), batch_size=16, shuffle=False)
 
-    evaluate_model(checkpoint["full_model"], test_loader, checkpoint["history"], device, thresh=0.4)
+    evaluate_model(checkpoint["full_model"], test_loader, checkpoint["history"], device, thresh=0.35)
